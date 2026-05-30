@@ -566,7 +566,7 @@ function buildMarkers(){
   const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xffffff}));
   sHead.rotation.x=Math.PI/2;sHead.position.set(0,.12,.38);startMesh.add(sHead);
   startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);
-  startMesh.rotation.y=-(startPos.dir||0)*Math.PI/2+Math.PI;
+  startMesh.rotation.y=-(startPos.dir||0)*Math.PI/2;
   scene.add(startMesh);
   // ゴール
   goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y-.52,goalPos.z);scene.add(goalMesh);
@@ -624,10 +624,10 @@ ghostMesh=new THREE.Mesh(GEO.block,MAT.ghost);ghostMesh.visible=false;scene.add(
 
 function refreshAll(){
   buildGround();buildBlocks();buildTiles();buildMarkers();buildTrail();
-  logPos.set(player.x,player.y,player.z);logRot=player.dir*Math.PI/2+Math.PI;
+  logPos.set(player.x,player.y,player.z);logRot=player.dir*Math.PI/2;
   drawPos.copy(logPos);drawRot=logRot;
   if(!steveGroup)steveGroup=buildSteve();
-  steveGroup.position.copy(drawPos);steveGroup.rotation.y=drawRot;
+  steveGroup.position.copy(drawPos);steveGroup.rotation.y=drawRot+Math.PI;
   orbit.target.copy(logPos);updateCam();updateHUD();
 }
 function updateHUD(){
@@ -694,15 +694,15 @@ function doUndo(){
   if(!history.length)return;
   const p=history.pop();actionLog.pop();
   player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
-  logPos.set(p.x,p.y,p.z);logRot=p.dir*Math.PI/2+Math.PI;
+  logPos.set(p.x,p.y,p.z);logRot=p.dir*Math.PI/2;
   buildTrail();updateHUD();updateLog();
 }
 function resetGame(){
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];actionLog=[];cleared=false;
   document.getElementById('goalmsg').style.display='none';
-  logPos.set(startPos.x,startPos.y,startPos.z);logRot=(startPos.dir||0)*Math.PI/2+Math.PI;
-  drawPos.copy(logPos);drawRot=(startPos.dir||0)*Math.PI/2+Math.PI;walkTime=0;
+  logPos.set(startPos.x,startPos.y,startPos.z);logRot=(startPos.dir||0)*Math.PI/2;
+  drawPos.copy(logPos);drawRot=(startPos.dir||0)*Math.PI/2;walkTime=0;
   buildTrail();updateHUD();updateLog();
   orbit.theta=dirToTheta(startPos.dir);orbit.target.copy(logPos);updateCam();
 }
@@ -776,8 +776,8 @@ function startReplay(){
   // プレイヤーをスタートに戻してトレイルをクリア
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];
-  logPos.set(player.x,player.y,player.z);logRot=(startPos.dir||0)*Math.PI/2+Math.PI;
-  drawPos.copy(logPos);drawRot=(startPos.dir||0)*Math.PI/2+Math.PI;
+  logPos.set(player.x,player.y,player.z);logRot=(startPos.dir||0)*Math.PI/2;
+  drawPos.copy(logPos);drawRot=(startPos.dir||0)*Math.PI/2;
   buildTrail();updateHUD();
   // ゴールメッセージを隠す
   document.getElementById('goalmsg').style.display='none';
@@ -825,7 +825,7 @@ function replayApplyStep(idx){
   }
   actionLog=tempLog;
   logPos.set(player.x,player.y,player.z);
-  logRot=player.dir*Math.PI/2+Math.PI;
+  logRot=player.dir*Math.PI/2;
   buildTrail();updateHUD();updateLog();
   updateReplayUI();
 }
@@ -867,7 +867,7 @@ function replayStop(){
     actionLog=[];history=[];
     // ログは消す（再生前のログを再生した=確認済みとして素直にリセット）
     logPos.set(player.x,player.y,player.z);
-    logRot=player.dir*Math.PI/2+Math.PI;
+    logRot=player.dir*Math.PI/2;
     drawPos.copy(logPos);drawRot=logRot;
     buildTrail();updateHUD();updateLog();
     replaySavedPlayer=null;
@@ -911,7 +911,7 @@ function animate(ts){
 
   if(steveGroup){
     steveGroup.position.set(drawPos.x,drawPos.y+bob,drawPos.z);
-    steveGroup.rotation.y=drawRot;
+    steveGroup.rotation.y=drawRot+Math.PI;
     if(steveArm_L) steveArm_L.rotation.x=swing;
     if(steveArm_R) steveArm_R.rotation.x=-swing;
     if(steveLeg_L) steveLeg_L.rotation.x=-swing;
