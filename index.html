@@ -389,9 +389,10 @@ const MAT={
   arm:mat(TX.arm),leg:mat(TX.leg),
 };
 // 頭の6面マテリアル配列を修正（Three.jsのBoxGeometry面順: +x,-x,+y,-y,+z,-z）
-// BoxGeometry面順序: +X,-X,+Y,-Y,+Z,-Z → headFrontは+Z面（index4）
-// ★rotation.yはdirの角度をそのまま使う。+Math.PI等のオフセット禁止（顔が逆になる）
-const headMats6=[mat(TX.headSide),mat(TX.headSide),mat(TX.headTop),mat(TX.grassSide),mat(TX.headFront),mat(TX.headBack)];
+// BoxGeometry面順序: +X,-X,+Y,-Y,+Z,-Z
+// headFrontを-Z面(index5)に配置 → rotation.y=0で顔が-Z方向 = 北(DV_N=[0,0,-1])と一致
+// ★TPSカメラは+Z側(theta=0)から見る = キャラの背後から見る
+const headMats6=[mat(TX.headSide),mat(TX.headSide),mat(TX.headTop),mat(TX.grassSide),mat(TX.headBack),mat(TX.headFront)];
 const bodyMats6=[mat(TX.body),mat(TX.body),mat(TX.body),mat(TX.body),mat(TX.bodyFront),mat(TX.body)];
 const armMats6 =[mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm)];
 const legMats6 =[mat(TX.leg),mat(TX.leg),mat(TX.leg),mat(TX.leg),mat(TX.leg),mat(TX.leg)];
@@ -564,9 +565,9 @@ function buildMarkers(){
   sBase.position.y=0;startMesh.add(sBase);
   // 矢印（軸＋先端）
   const sShaft=new THREE.Mesh(GEO.arrowShaft,new THREE.MeshLambertMaterial({color:0xffffff}));
-  sShaft.rotation.x=Math.PI/2;sShaft.position.set(0,.12,.1);startMesh.add(sShaft);
+  sShaft.rotation.x=-Math.PI/2;sShaft.position.set(0,.12,-.1);startMesh.add(sShaft);
   const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xffffff}));
-  sHead.rotation.x=Math.PI/2;sHead.position.set(0,.12,.38);startMesh.add(sHead);
+  sHead.rotation.x=-Math.PI/2;sHead.position.set(0,.12,-.38);startMesh.add(sHead);
   startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);
   startMesh.rotation.y=(startPos.dir||0)*Math.PI/2;
   scene.add(startMesh);
