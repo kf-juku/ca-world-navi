@@ -389,6 +389,8 @@ const MAT={
   arm:mat(TX.arm),leg:mat(TX.leg),
 };
 // 頭の6面マテリアル配列を修正（Three.jsのBoxGeometry面順: +x,-x,+y,-y,+z,-z）
+// BoxGeometry面順序: +X,-X,+Y,-Y,+Z,-Z → headFrontは+Z面（index4）
+// ★rotation.yはdirの角度をそのまま使う。+Math.PI等のオフセット禁止（顔が逆になる）
 const headMats6=[mat(TX.headSide),mat(TX.headSide),mat(TX.headTop),mat(TX.grassSide),mat(TX.headFront),mat(TX.headBack)];
 const bodyMats6=[mat(TX.body),mat(TX.body),mat(TX.body),mat(TX.body),mat(TX.bodyFront),mat(TX.body)];
 const armMats6 =[mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm)];
@@ -422,7 +424,7 @@ const sun=new THREE.DirectionalLight(0xffffff,.85);
 sun.position.set(8,20,8);scene.add(sun);
 
 // ===== カメラオービット =====
-const orbit={theta:Math.PI,phi:.55,dist:5.5,target:new THREE.Vector3()};
+const orbit={theta:0,phi:.55,dist:5.5,target:new THREE.Vector3()};
 function updateCam(){
   const t=orbit.target;
   camera.position.set(
@@ -566,7 +568,7 @@ function buildMarkers(){
   const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xffffff}));
   sHead.rotation.x=Math.PI/2;sHead.position.set(0,.12,.38);startMesh.add(sHead);
   startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);
-  startMesh.rotation.y=-(startPos.dir||0)*Math.PI/2;
+  startMesh.rotation.y=(startPos.dir||0)*Math.PI/2;
   scene.add(startMesh);
   // ゴール
   goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y-.52,goalPos.z);scene.add(goalMesh);
@@ -750,8 +752,12 @@ canvas.addEventListener('mousemove',e=>{
 
 // ===== カメラリセット =====
 function dirToTheta(dir){
-  // キャラの向きの背後からカメラが見る角度
-  return [Math.PI, -Math.PI/2, 0, Math.PI/2][dir||0];
+  // headFrontは+Z面。rotation.y=dir*π/2のとき顔がどこを向くかの背後
+  // dir=0(北): 顔=+Z, 背後=-Z → theta=0
+  // dir=1(東): 顔=+X, 背後=-X → theta=π/2  (Math.sin(π/2)=1,cos=0 → +X側)... 
+  // ※orbit: x=sin(theta)*sin(phi), z=cos(theta)*sin(phi)
+  // -Z側: theta=0(cos=1→z=+dist) → カメラはz=+dist側 → -Z方向から見る ✓
+  return [0, Math.PI/2, Math.PI, -Math.PI/2][dir||0];
 }
 function resetCam(){
   orbit.theta=dirToTheta(startPos.dir);orbit.phi=.55;orbit.dist=5.5;
