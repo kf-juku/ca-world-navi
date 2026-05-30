@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CAワールドナビ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+
+/* 全画面canvas */
+#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;}
+
+/* オーバーレイUI全体 */
+#ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+
+/* ヘッダー */
+#hdr{position:absolute;top:0;left:0;right:0;height:36px;background:rgba(0,0,0,0.55);
+  display:flex;align-items:center;justify-content:space-between;padding:0 10px;pointer-events:auto;}
+#hdr h1{font-size:13px;color:#fff;font-family:sans-serif;font-weight:bold;}
+/* mode-btn removed - editor moved to ca-world-navi-editor.html */
+
+/* ステータス */
+#status{position:absolute;top:42px;left:8px;background:rgba(0,0,0,0.6);border:1px solid #555;
+  border-radius:4px;padding:5px 9px;font-size:11px;line-height:1.9;font-family:monospace;color:#fff;}
+#status .val{color:#ffcc00;font-weight:bold;}
+
+/* ログバー */
+#logbar{position:absolute;top:42px;left:8px;
+  background:rgba(0,0,0,0.65);border:1px solid #444;border-radius:4px;
+  padding:4px 6px;font-size:10px;color:#7ec8e3;max-width:120px;min-width:60px;
+  max-height:40vh;overflow-y:auto;word-break:break-all;font-family:monospace;
+  display:flex;flex-direction:column;gap:1px;}
+#logbar span.ls{background:#1a3a5c;border-radius:2px;padding:1px 3px;display:block;}
+
+/* カメラヒント */
+#camhint{position:absolute;top:42px;right:8px;background:rgba(0,0,0,0.5);
+  border-radius:4px;padding:3px 7px;font-size:10px;color:#aaa;font-family:sans-serif;}
+
+/* ゴールメッセージ */
+#goalmsg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:#27ae60;border:3px solid #2ecc71;color:#fff;border-radius:10px;
+  padding:18px 24px;text-align:center;font-size:17px;font-weight:bold;display:none;
+  z-index:20;min-width:240px;pointer-events:auto;font-family:sans-serif;}
+#goalmsg button{margin-top:10px;background:#2ecc71;color:#fff;border:none;border-radius:4px;
+  padding:7px 18px;font-size:13px;cursor:pointer;font-weight:bold;}
+
+/* 編集ヒント */
+#edithint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(192,57,43,0.88);border-radius:4px;padding:4px 10px;
+  font-size:11px;display:none;font-family:sans-serif;color:#fff;}
+
+/* ===== 操作ボタン（画面下オーバーレイ） ===== */
+#ctrl{position:absolute;bottom:0;left:0;right:0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 12px 14px;pointer-events:none;}
+
+/* 左：十字キー */
+.dpad{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:3px;pointer-events:auto;}
+.dp{background:rgba(40,40,40,0.82);border:2px solid rgba(150,150,150,0.6);color:#fff;
+  border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;user-select:none;transition:background .1s;font-family:sans-serif;}
+.dp:active{background:rgba(100,100,100,0.9);}
+.dp.fwd{background:rgba(41,128,185,0.82);border-color:rgba(52,152,219,0.8);}
+.dp-e{background:transparent!important;border:none!important;pointer-events:none;}
+
+/* 中央下：手数・undo・reset */
+.ctrl-mid{display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:auto;padding-bottom:4px;}
+.step-badge{background:rgba(0,0,0,0.7);border:1.5px solid #666;border-radius:6px;
+  padding:4px 12px;font-size:13px;font-weight:bold;color:#ffcc00;font-family:monospace;}
+.mid-row{display:flex;gap:6px;}
+.midbtn{background:rgba(40,40,40,0.82);border:2px solid rgba(150,150,150,0.6);color:#fff;
+  border-radius:6px;height:36px;padding:0 12px;font-size:12px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;font-family:sans-serif;font-weight:bold;}
+.midbtn:active{background:rgba(100,100,100,0.9);}
+.midbtn.rst{background:rgba(120,30,30,0.82);border-color:rgba(192,57,43,0.7);}
+
+/* 右：ABXYボタン */
+.abxy{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:3px;pointer-events:auto;}
+.ab{border:2px solid rgba(150,150,150,0.6);color:#fff;border-radius:50%;font-size:14px;font-weight:bold;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;user-select:none;transition:filter .1s;font-family:sans-serif;}
+.ab:active{filter:brightness(1.5);}
+.ab-e{background:transparent!important;border:none!important;pointer-events:none;}
+.ab-y{background:rgba(39,174,96,0.85);border-color:rgba(46,204,113,0.8);}
+.ab-x{background:rgba(74,60,140,0.85);border-color:rgba(155,89,182,0.8);}
+.ab-b{background:rgba(200,120,20,0.85);border-color:rgba(243,156,18,0.8);}
+.ab-a{background:rgba(192,57,43,0.85);border-color:rgba(231,76,60,0.8);}
+
+/* 編集ツールバー */
+#edittb{position:absolute;bottom:0;left:0;right:0;display:none;
+  grid-template-columns:repeat(5,1fr);gap:4px;padding:8px;
+  background:rgba(0,0,0,0.75);pointer-events:auto;}
+.ebt{background:rgba(60,60,60,0.9);border:2px solid #666;color:#fff;border-radius:4px;
+  height:42px;font-size:11px;cursor:pointer;font-weight:bold;font-family:sans-serif;}
+.ebt.active{background:rgba(192,57,43,0.9);border-color:#e74c3c;}
+
+/* カメラリセット・ヘルプボタン */
+#cam-controls{position:absolute;top:42px;right:8px;display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
+.cam-btn{background:rgba(0,0,0,0.6);border:1.5px solid #666;color:#fff;border-radius:5px;
+  padding:4px 9px;font-size:12px;cursor:pointer;font-family:sans-serif;pointer-events:auto;
+  -webkit-tap-highlight-color:transparent;}
+.cam-btn:active{background:rgba(80,80,80,0.8);}
+
+/* 操作説明モーダル */
+#help-modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(20,20,30,0.97);border:2px solid #555;border-radius:10px;
+  padding:18px 20px;min-width:280px;max-width:90vw;display:none;z-index:30;
+  pointer-events:auto;font-family:sans-serif;color:#fff;}
+#help-modal h2{font-size:15px;margin-bottom:12px;color:#ffcc00;text-align:center;}
+#help-modal table{width:100%;border-collapse:collapse;font-size:12px;}
+#help-modal td{padding:5px 8px;border-bottom:1px solid #333;}
+#help-modal td:first-child{color:#7ec8e3;font-weight:bold;white-space:nowrap;}
+#help-modal .close-btn{margin-top:14px;width:100%;background:#444;border:1.5px solid #666;
+  color:#fff;border-radius:5px;padding:7px;font-size:13px;cursor:pointer;}
+
+/* 再生コントロール */
+#replay-ctrl{position:absolute;bottom:180px;left:8px;
+  background:rgba(0,0,0,0.75);border:1.5px solid #555;border-radius:8px;
+  padding:8px 14px;display:none;pointer-events:auto;text-align:center;
+  font-family:sans-serif;min-width:220px;}
+#replay-ctrl .replay-title{font-size:11px;color:#aaa;margin-bottom:6px;}
+#replay-ctrl .replay-step{font-size:13px;color:#ffcc00;font-weight:bold;margin-bottom:8px;font-family:monospace;}
+#replay-ctrl .replay-btns{display:flex;gap:6px;justify-content:center;}
+.rbtn{background:rgba(60,60,60,0.9);border:1.5px solid #666;color:#fff;
+  border-radius:5px;padding:5px 12px;font-size:18px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+.rbtn:active{background:rgba(100,100,100,0.9);}
+.rbtn.play{background:rgba(39,174,96,0.85);border-color:#2ecc71;}
+.rbtn.stop{background:rgba(192,57,43,0.85);border-color:#e74c3c;}
+#replay-progress{font-size:11px;color:#888;margin-top:5px;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <!-- ヘッダー -->
+  <div id="hdr">
+    <h1>⛏ CAワールドナビ</h1>
+    <select id="stage-sel" onchange="loadStageById(this.value)"
+      style="background:rgba(30,30,30,0.9);border:1.5px solid #666;color:#fff;
+      padding:3px 8px;border-radius:4px;font-size:12px;font-family:sans-serif;
+      max-width:180px;cursor:pointer;">
+      <option value="">読み込み中...</option>
+    </select>
+  </div>
+  <!-- ステータス -->
+  <div id="status">
+    <div>向き: <span class="val" id="ov-dir">北</span></div>
+    <div>位置: <span class="val" id="ov-pos">-</span></div>
+  </div>
+  <!-- ログ -->
+  <div id="logbar"><span id="logspan"></span></div>
+  <!-- カメラ操作・ヘルプ -->
+  <div id="cam-controls">
+    <button class="cam-btn" ontouchstart="resetCam()" onclick="resetCam()">📷 視点リセット</button>
+    <button class="cam-btn" ontouchstart="showHelp()" onclick="showHelp()">❓ 操作説明</button>
+  </div>
+
+  <!-- 操作説明モーダル -->
+  <div id="help-modal">
+    <h2>⛏ 操作説明</h2>
+    <table>
+      <tr><td>▲▼◀▶</td><td>前後左右に移動（向いている方向基準）</td></tr>
+      <tr><td>↺ ↻</td><td>左右に90度回転</td></tr>
+      <tr><td>⬆ ⬇</td><td>上下に移動（階段・段差）</td></tr>
+      <tr><td>↩ 戻す</td><td>一手取り消し</td></tr>
+      <tr><td>🔄</td><td>スタートに戻る</td></tr>
+      <tr><td>📷 視点リセット</td><td>カメラをキャラの後ろに戻す</td></tr>
+      <tr><td>▶ 再生</td><td>これまでの動きをコマ送りで再生</td></tr>
+      <tr><td>ドラッグ</td><td>視点を自由に回転</td></tr>
+      <tr><td>ピンチ</td><td>ズームイン・アウト</td></tr>
+    </table>
+    <button class="close-btn" onclick="hideHelp()">閉じる</button>
+  </div>
+
+  <!-- ステップ再生コントロール -->
+  <div id="replay-ctrl">
+    <div class="replay-title">▶ ステップ再生</div>
+    <div class="replay-step" id="replay-step-label">-</div>
+    <div class="replay-btns">
+      <button class="rbtn" ontouchstart="replayPrev()" onclick="replayPrev()">⏮</button>
+      <button class="rbtn" ontouchstart="replayToggle()" onclick="replayToggle()" id="replay-play-btn">▶</button>
+      <button class="rbtn" ontouchstart="replayNext()" onclick="replayNext()">⏭</button>
+      <button class="rbtn stop" ontouchstart="replayStop()" onclick="replayStop()">✕</button>
+    </div>
+    <div id="replay-progress"></div>
+  </div>
+  <!-- ゴール -->
+  <div id="goalmsg">
+    🎉 ゴール！<br>
+    <span id="gsteps"></span>手でクリア！<br>
+    <div id="glog" style="font-size:10px;margin-top:6px;max-width:280px;word-break:break-all;line-height:1.5;"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+      <button onclick="resetGame()" style="background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold;">もう一度</button>
+      <button onclick="startReplay()" style="background:#3498db;color:#fff;border:none;border-radius:4px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold;">▶ 再生</button>
+    </div>
+  </div>
+
+  <!-- 操作ボタン -->
+  <div id="ctrl">
+    <!-- 左十字 -->
+    <div class="dpad">
+      <div class="dp-e"></div>
+      <button class="dp fwd" ontouchstart="act('fwd')"  onclick="act('fwd')">▲</button>
+      <div class="dp-e"></div>
+      <button class="dp"     ontouchstart="act('left')" onclick="act('left')">◀</button>
+      <button class="dp"     ontouchstart="act('back')" onclick="act('back')">▼</button>
+      <button class="dp"     ontouchstart="act('right')"onclick="act('right')">▶</button>
+      <div class="dp-e"></div><div class="dp-e"></div><div class="dp-e"></div>
+    </div>
+    <!-- 中央 -->
+    <div class="ctrl-mid">
+      <div class="step-badge">手数: <span id="ov-steps">0</span></div>
+      <div class="mid-row">
+        <button class="midbtn" ontouchstart="doUndo()" onclick="doUndo()">↩ 戻す</button>
+        <button class="midbtn rst" ontouchstart="resetGame()" onclick="resetGame()">🔄</button>
+      </div>
+      <div class="mid-row">
+        <button class="midbtn" style="background:rgba(41,128,185,0.85);border-color:#3498db;" ontouchstart="startReplay()" onclick="startReplay()">▶ 再生</button>
+      </div>
+    </div>
+    <!-- 右ABXY -->
+    <div class="abxy">
+      <div class="ab-e"></div>
+      <button class="ab ab-y" ontouchstart="act('up')"   onclick="act('up')">⬆</button>
+      <div class="ab-e"></div>
+      <button class="ab ab-x" ontouchstart="act('rotL')" onclick="act('rotL')">↺</button>
+      <div class="ab-e"></div>
+      <button class="ab ab-b" ontouchstart="act('rotR')" onclick="act('rotR')">↻</button>
+      <div class="ab-e"></div>
+      <button class="ab ab-a" ontouchstart="act('down')" onclick="act('down')">⬇</button>
+      <div class="ab-e"></div>
+    </div>
+  </div>
+  <!-- 編集機能はca-world-navi-editor.htmlに移動 -->
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ===== 定数 =====
+const GRID=16,CELL=1;
+const DIRS=['N','E','S','W'];
+const DV={N:[0,0,-1],E:[1,0,0],S:[0,0,1],W:[-1,0,0]};
+const DL={N:'北',E:'東',S:'南',W:'西'};
+const AL={fwd:'前',back:'後',left:'左',right:'右',up:'上',down:'下',rotL:'左回転',rotR:'右回転'};
+
+// ===== テクスチャ =====
+function mkTex(fn,s=16){
+  const cv=document.createElement('canvas');cv.width=cv.height=s;
+  const c=cv.getContext('2d');fn(c,s);
+  const t=new THREE.CanvasTexture(cv);
+  t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;
+  return t;
+}
+
+// スティーブ スキンテクスチャ（マイクラ公式比率に近づける）
+// 頭：6面それぞれ専用テクスチャ
+function steveHeadFront(c,s){
+  // ベース肌
+  c.fillStyle='#c8a97e';c.fillRect(0,0,s,s);
+  // 目（左右対称、リアルな位置）
+  c.fillStyle='#2c1a0e';
+  c.fillRect(s*.2,s*.35,s*.2,s*.22);  // 左目
+  c.fillRect(s*.6,s*.35,s*.2,s*.22);  // 右目
+  // 白目
+  c.fillStyle='#e8e8e8';
+  c.fillRect(s*.22,s*.37,s*.08,s*.12);
+  c.fillRect(s*.62,s*.37,s*.08,s*.12);
+  // 瞳
+  c.fillStyle='#1a6baf';
+  c.fillRect(s*.24,s*.4,s*.05,s*.08);
+  c.fillRect(s*.64,s*.4,s*.05,s*.08);
+  // 鼻（中央）
+  c.fillStyle='#b08060';
+  c.fillRect(s*.44,s*.45,s*.12,s*.15);
+  // 口
+  c.fillStyle='#7a4030';
+  c.fillRect(s*.22,s*.65,s*.56,s*.08);
+  c.fillStyle='#c87060';
+  c.fillRect(s*.26,s*.67,s*.48,s*.04);
+}
+function steveHeadTop(c,s){
+  c.fillStyle='#3d2810';c.fillRect(0,0,s,s);// 茶色の髪
+  c.fillStyle='#2a1c0a';
+  for(let i=0;i<4;i++){c.fillRect(i*s/4,0,s/4-1,s*.3);}
+}
+function steveHeadSide(c,s){
+  c.fillStyle='#c8a97e';c.fillRect(0,0,s,s);
+  c.fillStyle='#3d2810';c.fillRect(0,0,s,s*.28);// 髪
+  c.fillStyle='#b08060';c.fillRect(s*.6,s*.45,s*.25,s*.15);// 耳
+}
+function steveHeadBack(c,s){
+  c.fillStyle='#3d2810';c.fillRect(0,0,s,s);// 全面髪
+  c.fillStyle='#2a1c0a';
+  c.fillRect(s*.1,s*.1,s*.35,s*.7);
+  c.fillRect(s*.55,s*.3,s*.35,s*.5);
+}
+
+// 体テクスチャ
+function steveBody(c,s){
+  c.fillStyle='#3a8fd4';c.fillRect(0,0,s,s);// シャツ青
+  // ボタンライン
+  c.fillStyle='#2a7abf';
+  c.fillRect(s*.45,0,s*.1,s);
+  // 陰影
+  c.fillStyle='rgba(0,0,0,0.15)';
+  c.fillRect(0,0,s*.12,s);c.fillRect(s*.88,0,s*.12,s);
+  // 横縞
+  c.fillStyle='rgba(255,255,255,0.08)';
+  for(let i=0;i<4;i++)c.fillRect(0,i*s/4,s,s/8);
+}
+function steveBodyFront(c,s){
+  c.fillStyle='#3a8fd4';c.fillRect(0,0,s,s);
+  c.fillStyle='#2a7abf';c.fillRect(s*.4,0,s*.2,s*.6);// ネクタイ風
+  c.fillStyle='rgba(0,0,0,0.1)';c.fillRect(0,s*.8,s,s*.2);
+}
+
+// 腕テクスチャ
+function steveArm(c,s){
+  c.fillStyle='#c8a97e';c.fillRect(0,0,s,s*.25);// 手
+  c.fillStyle='#3a8fd4';c.fillRect(0,s*.25,s,s*.75);// 袖
+  c.fillStyle='rgba(0,0,0,0.15)';c.fillRect(0,0,s*.2,s);c.fillRect(s*.8,0,s*.2,s);
+}
+
+// 脚テクスチャ
+function steveLeg(c,s){
+  c.fillStyle='#2a4a8a';c.fillRect(0,0,s,s*.7);// パンツ
+  c.fillStyle='#c8a97e';c.fillRect(0,s*.7,s,s*.3);// 靴
+  c.fillStyle='rgba(0,0,0,0.2)';c.fillRect(0,0,s*.2,s);c.fillRect(s*.8,0,s*.2,s);
+  c.fillStyle='#1a3a7a';c.fillRect(s*.3,0,s*.4,s*.7);// ステッチ
+}
+
+const TX={
+  headFront: mkTex(steveHeadFront,32),
+  headTop:   mkTex(steveHeadTop,32),
+  headSide:  mkTex(steveHeadSide,32),
+  headBack:  mkTex(steveHeadBack,32),
+  bodyFront: mkTex(steveBodyFront,32),
+  body:      mkTex(steveBody,32),
+  arm:       mkTex(steveArm,32),
+  leg:       mkTex(steveLeg,32),
+  stone: mkTex((c,s)=>{
+    c.fillStyle='#7a7a7a';c.fillRect(0,0,s,s);
+    c.fillStyle='#666';const p=s/4;
+    for(let r=0;r<4;r++)for(let cc=0;cc<4;cc++)if((r+cc)%2===0)c.fillRect(cc*p+1,r*p+1,p-2,p-2);
+    c.strokeStyle='#555';c.lineWidth=.8;
+    for(let i=1;i<4;i++){c.beginPath();c.moveTo(i*p,0);c.lineTo(i*p,s);c.stroke();c.beginPath();c.moveTo(0,i*p);c.lineTo(s,i*p);c.stroke();}
+  }),
+  glass: mkTex((c,s)=>{
+    c.fillStyle='rgba(160,210,255,0.18)';c.fillRect(0,0,s,s);
+    c.strokeStyle='rgba(200,240,255,0.85)';c.lineWidth=1.5;c.strokeRect(1,1,s-2,s-2);
+    c.strokeStyle='rgba(255,255,255,0.4)';c.lineWidth=1.5;
+    c.beginPath();c.moveTo(2,2);c.lineTo(s*.4,s*.3);c.stroke();
+  },32),
+  grassTop: mkTex((c,s)=>{
+    c.fillStyle='#4a8a3a';c.fillRect(0,0,s,s);
+    for(let i=0;i<12;i++){c.fillStyle=Math.random()>.5?'#3a7a2a':'#5a9a4a';c.fillRect(Math.random()*s,Math.random()*s,2,2);}
+  }),
+  grassSide: mkTex((c,s)=>{
+    c.fillStyle='#8B7355';c.fillRect(0,0,s,s);
+    c.fillStyle='#4a8a3a';c.fillRect(0,0,s,s/4);
+    for(let i=0;i<s;i+=2){c.fillStyle=i%4===0?'#3a7a2a':'#5a9a4a';c.fillRect(i,0,2,s/4);}
+  }),
+};
+const tileCols=['#e74c3c','#3498db','#f39c12','#27ae60','#ecf0f1','#9b59b6','#1abc9c'];
+const tileTex=tileCols.map(col=>mkTex((c,s)=>{
+  c.fillStyle=col;c.fillRect(0,0,s,s);
+  c.strokeStyle='rgba(0,0,0,0.3)';c.lineWidth=1;c.strokeRect(1,1,s-2,s-2);
+  c.fillStyle='rgba(255,255,255,0.2)';c.fillRect(1,1,s/3,s/3);
+}));
+
+// ===== マテリアル =====
+function mat(map,opt={}){return new THREE.MeshLambertMaterial({map,...opt});}
+const MAT={
+  stone:mat(TX.stone),
+  glass:mat(TX.glass,{transparent:true,opacity:0.55}),
+  grassTop:mat(TX.grassTop),grassSide:mat(TX.grassSide),
+  trail:new THREE.MeshLambertMaterial({color:0xffaa00,transparent:true,opacity:0.38}),
+  arrowMove:new THREE.MeshLambertMaterial({color:0xffdd00,transparent:true,opacity:0.85}),
+  arrowLine:new THREE.LineBasicMaterial({color:0xffdd00,transparent:true,opacity:0.6,linewidth:2}),
+  arrowDot:new THREE.MeshLambertMaterial({color:0xff8800,transparent:true,opacity:0.75}),
+  ghost:new THREE.MeshLambertMaterial({color:0x4488ff,transparent:true,opacity:0.33}),
+  start:new THREE.MeshLambertMaterial({color:0x00cc66}),
+  goal:new THREE.MeshLambertMaterial({color:0xff2244}),
+  // スティーブ頭（6面）
+  headMats:[mat(TX.headSide),mat(TX.headSide),mat(TX.headTop),mkTex((c,s)=>{c.fillStyle='#8B7355';c.fillRect(0,0,s,s);}),mat(TX.headFront),mat(TX.headBack)].map(m=>m instanceof THREE.Material?m:mat(m)),
+  body:mat(TX.bodyFront),bodySide:mat(TX.body),
+  arm:mat(TX.arm),leg:mat(TX.leg),
+};
+// 頭の6面マテリアル配列を修正（Three.jsのBoxGeometry面順: +x,-x,+y,-y,+z,-z）
+const headMats6=[mat(TX.headSide),mat(TX.headSide),mat(TX.headTop),mat(TX.grassSide),mat(TX.headBack),mat(TX.headFront)];
+const bodyMats6=[mat(TX.body),mat(TX.body),mat(TX.body),mat(TX.body),mat(TX.bodyFront),mat(TX.body)];
+const armMats6 =[mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm),mat(TX.arm)];
+const legMats6 =[mat(TX.leg),mat(TX.leg),mat(TX.leg),mat(TX.leg),mat(TX.leg),mat(TX.leg)];
+const matGrass6=[MAT.stone,MAT.stone,MAT.grassTop,MAT.grassSide,MAT.stone,MAT.stone];
+const tileMats=tileTex.map(t=>new THREE.MeshLambertMaterial({map:t}));
+
+// ===== ジオメトリ =====
+const GEO={
+  block:new THREE.BoxGeometry(.99,.99,.99),
+  ground:new THREE.BoxGeometry(1,1,1),
+  tile:new THREE.BoxGeometry(.98,.06,.98),
+  trail:new THREE.BoxGeometry(.18,.18,.18),
+  marker:new THREE.CylinderGeometry(.33,.33,.07,10),
+  gem:new THREE.OctahedronGeometry(.2),
+  arrowHead:new THREE.ConeGeometry(.13,.28,6),   // 矢印の先端
+  arrowShaft:new THREE.CylinderGeometry(.04,.04,.5,5), // 矢印の軸
+  dot:new THREE.SphereGeometry(.1,6,6),          // 回転・上下用ドット
+};
+
+// ===== Three.js =====
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87CEEB);
+scene.fog=new THREE.Fog(0x87CEEB,16,32);
+const camera=new THREE.PerspectiveCamera(60,1,.1,60);
+scene.add(new THREE.AmbientLight(0xffffff,.72));
+const sun=new THREE.DirectionalLight(0xffffff,.85);
+sun.position.set(8,20,8);scene.add(sun);
+
+// ===== カメラオービット =====
+const orbit={theta:0,phi:.55,dist:5.5,target:new THREE.Vector3()};
+function updateCam(){
+  const t=orbit.target;
+  camera.position.set(
+    t.x+orbit.dist*Math.sin(orbit.phi)*Math.sin(orbit.theta),
+    t.y+orbit.dist*Math.cos(orbit.phi),
+    t.z+orbit.dist*Math.sin(orbit.phi)*Math.cos(orbit.theta)
+  );
+  camera.lookAt(t);
+}
+
+// タッチ/マウスカメラ操作
+let drag={on:false,x:0,y:0};
+const wrap=document.getElementById('c');
+wrap.addEventListener('mousedown',e=>{if(editMode)return;drag.on=true;drag.x=e.clientX;drag.y=e.clientY;});
+window.addEventListener('mousemove',e=>{
+  if(!drag.on)return;
+  orbit.theta-=(e.clientX-drag.x)*.007;
+  orbit.phi=Math.max(.08,Math.min(1.45,orbit.phi-(e.clientY-drag.y)*.007));
+  drag.x=e.clientX;drag.y=e.clientY;updateCam();
+});
+window.addEventListener('mouseup',()=>drag.on=false);
+let t1={};
+wrap.addEventListener('touchstart',e=>{
+  if(editMode)return;
+  if(e.touches.length===1){drag.on=true;drag.x=e.touches[0].clientX;drag.y=e.touches[0].clientY;}
+  else if(e.touches.length===2)t1={d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)};
+},{passive:true});
+wrap.addEventListener('touchmove',e=>{
+  if(editMode)return;e.preventDefault();
+  if(e.touches.length===1&&drag.on){
+    orbit.theta-=(e.touches[0].clientX-drag.x)*.007;
+    orbit.phi=Math.max(.08,Math.min(1.45,orbit.phi-(e.touches[0].clientY-drag.y)*.007));
+    drag.x=e.touches[0].clientX;drag.y=e.touches[0].clientY;
+  }else if(e.touches.length===2){
+    const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    orbit.dist=Math.max(2,Math.min(14,orbit.dist*(t1.d/nd)));t1.d=nd;
+  }
+  updateCam();
+},{passive:false});
+wrap.addEventListener('touchend',()=>drag.on=false,{passive:true});
+wrap.addEventListener('wheel',e=>{orbit.dist=Math.max(2,Math.min(14,orbit.dist+e.deltaY*.01));updateCam();},{passive:true});
+
+// ===== スティーブ（高品質3D） =====
+let steveGroup,steveArm_L,steveArm_R,steveLeg_L,steveLeg_R,steveHead;
+function buildSteve(){
+  const g=new THREE.Group();
+  // 比率：マイクラ公式（8x8x8頭、8x12x4体、4x12x4腕脚）をそのまま縮小
+  // 頭
+  steveHead=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.5),headMats6);
+  steveHead.position.y=.56;g.add(steveHead);
+  // 体
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.5,.62,.25),bodyMats6);
+  body.position.y=.1;g.add(body);
+  // 腕L（左）
+  steveArm_L=new THREE.Group();
+  const alMesh=new THREE.Mesh(new THREE.BoxGeometry(.22,.55,.22),armMats6);
+  alMesh.position.y=-.275;steveArm_L.add(alMesh);
+  steveArm_L.position.set(-.36,.38,0);g.add(steveArm_L);
+  // 腕R（右）
+  steveArm_R=new THREE.Group();
+  const arMesh=new THREE.Mesh(new THREE.BoxGeometry(.22,.55,.22),armMats6);
+  arMesh.position.y=-.275;steveArm_R.add(arMesh);
+  steveArm_R.position.set(.36,.38,0);g.add(steveArm_R);
+  // 脚L（左）
+  steveLeg_L=new THREE.Group();
+  const llMesh=new THREE.Mesh(new THREE.BoxGeometry(.23,.55,.23),legMats6);
+  llMesh.position.y=-.275;steveLeg_L.add(llMesh);
+  steveLeg_L.position.set(-.14,-.22,0);g.add(steveLeg_L);
+  // 脚R（右）
+  steveLeg_R=new THREE.Group();
+  const lrMesh=new THREE.Mesh(new THREE.BoxGeometry(.23,.55,.23),legMats6);
+  lrMesh.position.y=-.275;steveLeg_R.add(lrMesh);
+  steveLeg_R.position.set(.14,-.22,0);g.add(steveLeg_R);
+  scene.add(g);return g;
+}
+
+// ===== 状態 =====
+let blocks={},tiles={};
+let startPos={x:1,y:1,z:1},goalPos={x:GRID-2,y:1,z:GRID-2};
+let player={x:1,y:1,z:1,dir:0};
+let history=[],actionLog=[],cleared=false;
+let editMode=false,editTool='stone';
+let blockMeshes={},tileMeshes={},trailMeshes=[];
+let startMesh,goalMesh,ghostMesh;
+let logPos=new THREE.Vector3(1,1,1),logRot=0;
+let drawPos=new THREE.Vector3(1,1,1),drawRot=0;
+let walkTime=0,isMoving=false;
+
+function buildDefault(){
+  blocks={};tiles={};
+  for(let x=0;x<GRID;x++)for(let z=0;z<GRID;z++)
+    if(x===0||x===GRID-1||z===0||z===GRID-1)setBlock(x,0,z,'stone');
+  [[3,0,2],[3,0,3],[3,0,4],[3,0,5],[6,0,3],[6,0,4],[6,0,5],[6,0,6],
+   [9,0,2],[9,0,3],[9,0,4],[5,0,9],[6,0,9],[7,0,9],[8,0,9],
+   [2,0,8],[2,0,9],[2,0,10],[11,0,6],[11,0,7],[11,0,8],
+   [4,1,4],[5,1,4],[4,1,5],[5,1,5],[8,1,9],[9,1,9],[8,1,10],[9,1,10],
+  ].forEach(([x,y,z])=>setBlock(x,y,z,'glass'));
+  [[1,1,0],[2,1,1],[3,1,2],[4,1,0],[5,1,3],[6,1,4],[7,1,1],[8,1,2],[9,1,0],[10,1,3],
+   [1,2,4],[2,2,0],[3,2,1],[4,2,3],[5,2,2],[6,2,0],[7,2,4],[8,2,1],[9,2,3],[10,2,2],
+  ].forEach(([x,z,c])=>tiles[`${x},${z}`]=c);
+  startPos={x:1,y:1,z:1};goalPos={x:GRID-2,y:1,z:GRID-2};
+}
+function setBlock(x,y,z,t){blocks[`${x},${y},${z}`]={type:t};}
+function remBlock(x,y,z){delete blocks[`${x},${y},${z}`];}
+function hasBlock(x,y,z){return!!blocks[`${x},${y},${z}`];}
+
+// ===== シーン構築 =====
+let groundGroup;
+function buildGround(){
+  if(groundGroup)scene.remove(groundGroup);
+  groundGroup=new THREE.Group();
+  for(let x=0;x<GRID;x++)for(let z=0;z<GRID;z++){
+    const m=new THREE.Mesh(GEO.ground,matGrass6);m.position.set(x,-1,z);groundGroup.add(m);
+  }
+  scene.add(groundGroup);
+}
+function buildBlocks(){
+  Object.values(blockMeshes).forEach(m=>scene.remove(m));blockMeshes={};
+  Object.entries(blocks).forEach(([k,{type}])=>{
+    const[x,y,z]=k.split(',').map(Number);
+    const m=new THREE.Mesh(GEO.block,type==='glass'?MAT.glass:MAT.stone);
+    m.position.set(x,y,z);scene.add(m);blockMeshes[k]=m;
+  });
+}
+function buildTiles(){
+  Object.values(tileMeshes).forEach(m=>scene.remove(m));tileMeshes={};
+  Object.entries(tiles).forEach(([k,ci])=>{
+    const[x,z]=k.split(',').map(Number);
+    const m=new THREE.Mesh(GEO.tile,tileMats[ci]);m.position.set(x,-.47,z);scene.add(m);tileMeshes[k]=m;
+  });
+}
+function buildMarkers(){
+  if(startMesh)scene.remove(startMesh);if(goalMesh)scene.remove(goalMesh);
+  startMesh=new THREE.Mesh(GEO.marker,MAT.start);startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);scene.add(startMesh);
+  goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y-.52,goalPos.z);scene.add(goalMesh);
+  if(!goalMesh._gem){const gem=new THREE.Mesh(GEO.gem,new THREE.MeshLambertMaterial({color:0x00eeff,emissive:0x009999}));gem.position.y=.55;goalMesh.add(gem);goalMesh._gem=gem;}
+}
+function buildTrail(){
+  trailMeshes.forEach(m=>scene.remove(m));trailMeshes=[];
+  if(history.length===0)return;
+
+  // 軌跡ポイント列（history[0]＝スタート直後の前ポジション + 現在位置）
+  const pts=[...history,{x:player.x,y:player.y,z:player.z,dir:player.dir}];
+
+  // 移動ステップに矢印を置く
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i],b=pts[i+1];
+    const moved=(a.x!==b.x||a.y!==b.y||a.z!==b.z);
+    if(moved){
+      // 中間点に矢印（軸 + 先端）
+      const dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z;
+      const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,mz=(a.z+b.z)/2;
+
+      // 軸
+      const shaft=new THREE.Mesh(GEO.arrowShaft,MAT.arrowMove);
+      shaft.position.set(mx,my,mz);
+      // 方向に向ける
+      const dir3=new THREE.Vector3(dx,dy,dz).normalize();
+      const up=new THREE.Vector3(0,1,0);
+      const q=new THREE.Quaternion().setFromUnitVectors(up,dir3);
+      shaft.setRotationFromQuaternion(q);
+      scene.add(shaft);trailMeshes.push(shaft);
+
+      // 先端
+      const head=new THREE.Mesh(GEO.arrowHead,MAT.arrowMove);
+      head.position.set(b.x*.7+a.x*.3,b.y*.7+a.y*.3,b.z*.7+a.z*.3);
+      head.setRotationFromQuaternion(q);
+      scene.add(head);trailMeshes.push(head);
+
+      // ステップ間の線
+      const geom=new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(a.x,a.y,a.z),
+        new THREE.Vector3(b.x,b.y,b.z)
+      ]);
+      const line=new THREE.Line(geom,MAT.arrowLine);
+      scene.add(line);trailMeshes.push(line);
+    } else {
+      // 回転・上下はドット
+      const dot=new THREE.Mesh(GEO.dot,MAT.arrowDot);
+      dot.position.set(a.x,a.y+.15,a.z);
+      scene.add(dot);trailMeshes.push(dot);
+    }
+  }
+}
+ghostMesh=new THREE.Mesh(GEO.block,MAT.ghost);ghostMesh.visible=false;scene.add(ghostMesh);
+
+function refreshAll(){
+  buildGround();buildBlocks();buildTiles();buildMarkers();buildTrail();
+  logPos.set(player.x,player.y,player.z);logRot=player.dir*Math.PI/2;
+  drawPos.copy(logPos);drawRot=logRot;
+  if(!steveGroup)steveGroup=buildSteve();
+  steveGroup.position.copy(drawPos);steveGroup.rotation.y=drawRot;
+  orbit.target.copy(logPos);updateCam();updateHUD();
+}
+function updateHUD(){
+  document.getElementById('ov-dir').textContent=DL[DIRS[player.dir]];
+  document.getElementById('ov-pos').textContent=`(${player.x},${player.y},${player.z})`;
+  document.getElementById('ov-steps').textContent=actionLog.length;
+}
+function compressLog(log){
+  // 連続する同操作を「前×3」形式に圧縮
+  if(!log.length)return[];
+  const out=[];
+  let cur=log[0],cnt=1;
+  for(let i=1;i<log.length;i++){
+    if(log[i]===cur)cnt++;
+    else{out.push({a:cur,n:cnt});cur=log[i];cnt=1;}
+  }
+  out.push({a:cur,n:cnt});
+  return out;
+}
+function updateLog(){
+  const compressed=compressLog(actionLog);
+  document.getElementById('logspan').innerHTML=compressed.map(({a,n})=>
+    `<span class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
+  ).join('');
+  const b=document.getElementById('logbar');b.scrollTop=b.scrollHeight;
+}
+
+// ===== 操作 =====
+let lastAct=0;
+function act(a){
+  const n=Date.now();if(n-lastAct<200)return;lastAct=n;
+  if(cleared||editMode)return;
+  const di=player.dir,dv=DV[DIRS[di]];
+  const lv=DV[DIRS[(di+3)%4]],rv=DV[DIRS[(di+1)%4]];
+  let nx=player.x,ny=player.y,nz=player.z,nd=player.dir;
+  if(a==='fwd')     {nx+=dv[0];ny+=dv[1];nz+=dv[2];}
+  else if(a==='back'){nx-=dv[0];ny-=dv[1];nz-=dv[2];}
+  else if(a==='left'){nx+=lv[0];nz+=lv[2];}
+  else if(a==='right'){nx+=rv[0];nz+=rv[2];}
+  else if(a==='up')  {ny+=1;}
+  else if(a==='down'){ny-=1;}
+  else if(a==='rotL'){nd=(di+3)%4;}
+  else if(a==='rotR'){nd=(di+1)%4;}
+  if(['fwd','back','left','right','up','down'].includes(a)){
+    if(nx<0||ny<0||nz<0||nx>=GRID||ny>=GRID||nz>=GRID)return;
+    if(hasBlock(nx,ny,nz))return;
+  }
+  history.push({x:player.x,y:player.y,z:player.z,dir:player.dir});
+  actionLog.push(a);
+  player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
+  logPos.set(nx,ny,nz);logRot=nd*Math.PI/2;
+  isMoving=true;
+  buildTrail();updateHUD();updateLog();
+  if(player.x===goalPos.x&&player.y===goalPos.y&&player.z===goalPos.z){
+    cleared=true;
+    document.getElementById('gsteps').textContent=actionLog.length;
+    document.getElementById('glog').innerHTML=compressLog(actionLog).map(({a,n})=>
+      AL[a]+(n>1?`×${n}`:'')
+    ).join(' → ');
+    document.getElementById('goalmsg').style.display='block';
+  }
+}
+function doUndo(){
+  if(!history.length)return;
+  const p=history.pop();actionLog.pop();
+  player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
+  logPos.set(p.x,p.y,p.z);logRot=p.dir*Math.PI/2;
+  buildTrail();updateHUD();updateLog();
+}
+function resetGame(){
+  player={x:startPos.x,y:startPos.y,z:startPos.z,dir:0};
+  history=[];actionLog=[];cleared=false;
+  document.getElementById('goalmsg').style.display='none';
+  logPos.set(startPos.x,startPos.y,startPos.z);logRot=0;
+  drawPos.copy(logPos);drawRot=0;walkTime=0;
+  buildTrail();updateHUD();updateLog();
+  orbit.target.copy(logPos);updateCam();
+}
+
+// ===== 編集モード =====
+function toggleMode(){
+  editMode=!editMode;
+  const btn=document.getElementById('mode-btn');
+  document.getElementById('ctrl').style.display=editMode?'none':'flex';
+  document.getElementById('edittb').style.display=editMode?'grid':'none';
+  document.getElementById('edithint').style.display=editMode?'block':'none';
+  ghostMesh.visible=editMode;
+  btn.textContent=editMode?'🎮 プレイ':'✏️ マップ編集';
+  btn.classList.toggle('edit',editMode);
+  if(!editMode)resetGame();
+}
+function setTool(t){
+  editTool=t;
+  ['stone','glass','start','goal','erase'].forEach(id=>document.getElementById('eb-'+id).classList.toggle('active',id===t));
+}
+const rc=new THREE.Raycaster(),mv=new THREE.Vector2();
+const gpl=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+function scToCell(cx,cy){
+  const r=canvas.getBoundingClientRect();
+  mv.x=((cx-r.left)/r.width)*2-1;mv.y=-((cy-r.top)/r.height)*2+1;
+  rc.setFromCamera(mv,camera);
+  const pt=new THREE.Vector3();rc.ray.intersectPlane(gpl,pt);
+  if(!pt)return null;return{x:Math.round(pt.x),y:1,z:Math.round(pt.z)};
+}
+function applyEdit(cx,cy){
+  const t=scToCell(cx,cy);if(!t)return;
+  const{x,y,z}=t;if(x<0||z<0||x>=GRID||z>=GRID)return;
+  if(editTool==='stone'||editTool==='glass'){setBlock(x,y,z,editTool);buildBlocks();}
+  else if(editTool==='erase'){remBlock(x,y,z);buildBlocks();}
+  else if(editTool==='start'){startPos={x,y,z};buildMarkers();resetGame();}
+  else if(editTool==='goal'){goalPos={x,y,z};buildMarkers();}
+}
+canvas.addEventListener('click',e=>{if(!editMode)return;applyEdit(e.clientX,e.clientY);});
+canvas.addEventListener('touchend',e=>{if(!editMode)return;e.preventDefault();applyEdit(e.changedTouches[0].clientX,e.changedTouches[0].clientY);},{passive:false});
+canvas.addEventListener('mousemove',e=>{
+  if(!editMode)return;
+  const t=scToCell(e.clientX,e.clientY);
+  if(t){ghostMesh.position.set(t.x,t.y,t.z);ghostMesh.visible=true;}else ghostMesh.visible=false;
+});
+
+// ===== カメラリセット =====
+function resetCam(){
+  orbit.theta=0;orbit.phi=.55;orbit.dist=5.5;
+  orbit.target.copy(drawPos);
+  updateCam();
+}
+
+// ===== ヘルプ =====
+function showHelp(){document.getElementById('help-modal').style.display='block';}
+function hideHelp(){document.getElementById('help-modal').style.display='none';}
+
+// ===== ステップ再生 =====
+let replayIdx=0,replayLog=[],replayTimer=null,replayPlaying=false;
+let replaySavedPlayer=null;
+
+function startReplay(){
+  if(actionLog.length===0)return;
+  // 現在の状態を保存してスタート位置に戻す
+  replaySavedPlayer={...player};
+  replayLog=[...actionLog];
+  replayIdx=0;
+  // プレイヤーをスタートに戻してトレイルをクリア
+  player={x:startPos.x,y:startPos.y,z:startPos.z,dir:0};
+  history=[];
+  logPos.set(player.x,player.y,player.z);logRot=0;
+  drawPos.copy(logPos);drawRot=0;
+  buildTrail();updateHUD();
+  // ゴールメッセージを隠す
+  document.getElementById('goalmsg').style.display='none';
+  // 再生UIを表示
+  document.getElementById('replay-ctrl').style.display='block';
+  document.getElementById('ctrl').style.opacity='0.3';
+  document.getElementById('ctrl').style.pointerEvents='none';
+  replayPlaying=false;
+  updateReplayUI();
+}
+
+function updateReplayUI(){
+  const compressed=compressLog(replayLog.slice(0,replayIdx));
+  const label=replayIdx===0?'スタート':
+    (AL[replayLog[replayIdx-1]]||replayLog[replayIdx-1]);
+  document.getElementById('replay-step-label').textContent=
+    replayIdx===0?'スタート地点':
+    `${replayIdx}手目: ${label}`;
+  document.getElementById('replay-progress').textContent=
+    `${replayIdx} / ${replayLog.length}手`;
+  document.getElementById('replay-play-btn').textContent=replayPlaying?'⏸':'▶';
+}
+
+function replayApplyStep(idx){
+  // idxステップ目の状態をゼロから再現
+  player={x:startPos.x,y:startPos.y,z:startPos.z,dir:0};
+  history=[];
+  const tempLog=[];
+  for(let i=0;i<idx;i++){
+    const a=replayLog[i];
+    const di=player.dir,dv=DV[DIRS[di]];
+    const lv=DV[DIRS[(di+3)%4]],rv=DV[DIRS[(di+1)%4]];
+    let nx=player.x,ny=player.y,nz=player.z,nd=player.dir;
+    if(a==='fwd')     {nx+=dv[0];ny+=dv[1];nz+=dv[2];}
+    else if(a==='back'){nx-=dv[0];ny-=dv[1];nz-=dv[2];}
+    else if(a==='left'){nx+=lv[0];nz+=lv[2];}
+    else if(a==='right'){nx+=rv[0];nz+=rv[2];}
+    else if(a==='up')  {ny+=1;}
+    else if(a==='down'){ny-=1;}
+    else if(a==='rotL'){nd=(di+3)%4;}
+    else if(a==='rotR'){nd=(di+1)%4;}
+    history.push({x:player.x,y:player.y,z:player.z,dir:player.dir});
+    player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
+    tempLog.push(a);
+  }
+  actionLog=tempLog;
+  logPos.set(player.x,player.y,player.z);
+  logRot=player.dir*Math.PI/2;
+  buildTrail();updateHUD();updateLog();
+  updateReplayUI();
+}
+
+function replayNext(){
+  if(replayIdx>=replayLog.length)return;
+  replayIdx++;replayApplyStep(replayIdx);
+}
+function replayPrev(){
+  if(replayIdx<=0)return;
+  replayIdx--;replayApplyStep(replayIdx);
+}
+function replayToggle(){
+  if(replayPlaying){
+    replayPlaying=false;clearInterval(replayTimer);
+    document.getElementById('replay-play-btn').textContent='▶';
+  } else {
+    if(replayIdx>=replayLog.length)replayIdx=0;
+    replayPlaying=true;
+    document.getElementById('replay-play-btn').textContent='⏸';
+    replayTimer=setInterval(()=>{
+      if(replayIdx>=replayLog.length){
+        replayPlaying=false;clearInterval(replayTimer);
+        document.getElementById('replay-play-btn').textContent='▶';
+        return;
+      }
+      replayIdx++;replayApplyStep(replayIdx);
+    },600);
+  }
+}
+function replayStop(){
+  replayPlaying=false;clearInterval(replayTimer);
+  document.getElementById('replay-ctrl').style.display='none';
+  document.getElementById('ctrl').style.opacity='1';
+  document.getElementById('ctrl').style.pointerEvents='auto';
+  // 再生前の状態を復元
+  if(replaySavedPlayer){
+    player={...replaySavedPlayer};
+    actionLog=[];history=[];
+    // ログは消す（再生前のログを再生した=確認済みとして素直にリセット）
+    logPos.set(player.x,player.y,player.z);
+    logRot=player.dir*Math.PI/2;
+    drawPos.copy(logPos);drawRot=logRot;
+    buildTrail();updateHUD();updateLog();
+    replaySavedPlayer=null;
+  }
+  cleared=false;
+}
+
+// ===== キーボード =====
+document.addEventListener('keydown',e=>{
+  const m={ArrowUp:'fwd',ArrowDown:'back',ArrowLeft:'rotL',ArrowRight:'rotR',w:'fwd',s:'back',a:'left',d:'right',q:'rotL',e:'rotR',' ':'up',z:'undo'};
+  if(m[e.key]==='undo'){doUndo();return;}
+  if(m[e.key]){e.preventDefault();act(m[e.key]);}
+});
+
+// ===== リサイズ =====
+function onResize(){
+  renderer.setSize(window.innerWidth,window.innerHeight,false);
+  camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',onResize);
+
+// ===== アニメーション =====
+const LERP=0.16;
+let prevT=0;
+function animate(ts){
+  requestAnimationFrame(animate);
+  const dt=Math.min((ts-prevT)/16.67,3);prevT=ts;
+  const lf=1-Math.pow(1-LERP,dt);
+
+  // 位置・回転補間
+  drawPos.lerp(logPos,lf);
+  let dr=logRot-drawRot;
+  while(dr>Math.PI)dr-=Math.PI*2;while(dr<-Math.PI)dr+=Math.PI*2;
+  drawRot+=dr*lf;
+
+  // 歩行アニメーション
+  const moving=drawPos.distanceTo(logPos)>0.02;
+  if(moving)walkTime+=dt*0.18;
+  const swing=moving?Math.sin(walkTime*Math.PI*2)*0.45:0;
+  const bob=moving?Math.abs(Math.sin(walkTime*Math.PI*2))*0.04:0;
+
+  if(steveGroup){
+    steveGroup.position.set(drawPos.x,drawPos.y+bob,drawPos.z);
+    steveGroup.rotation.y=drawRot;
+    if(steveArm_L) steveArm_L.rotation.x=swing;
+    if(steveArm_R) steveArm_R.rotation.x=-swing;
+    if(steveLeg_L) steveLeg_L.rotation.x=-swing;
+    if(steveLeg_R) steveLeg_R.rotation.x=swing;
+    // カメラターゲット追従
+    orbit.target.lerp(drawPos,lf*.6);
+    updateCam();
+  }
+  if(goalMesh&&goalMesh._gem)goalMesh._gem.rotation.y+=0.04;
+  renderer.render(scene,camera);
+}
+
+// ===== GAS・ステージ管理 =====
+// ※このURLはプレイ用。読み取り専用操作のみ使用
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyhowPdOUg0Rki2XrHnjUToROGDIuDu6yEITgWCFDO2ZPDZsr3VKZ03-1b2CKIcM-lS/exec';
+
+let stageList = [];
+
+// ステージ一覧をGASから取得してドロップダウンを更新
+async function loadStageList() {
+  const sel = document.getElementById('stage-sel');
+  if (!GAS_URL) {
+    sel.innerHTML = '<option value="">（GAS未設定）</option>';
+    buildDefault(); refreshAll();
+    return;
+  }
+  try {
+    sel.innerHTML = '<option value="">読み込み中...</option>';
+    const res = await fetch(GAS_URL + '?action=list');
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+    stageList = json.stages;
+    sel.innerHTML = stageList.map(s =>
+      `<option value="${s.id}">${s.id} ${s.name ? '- ' + s.name : ''}</option>`
+    ).join('');
+    // URLパラメータ ?stage=xxx があればそのステージを選択
+    const params = new URLSearchParams(location.search);
+    const stageId = params.get('stage');
+    if (stageId && stageList.find(s => s.id === stageId)) {
+      sel.value = stageId;
+      await loadStageById(stageId);
+    } else if (stageList.length > 0) {
+      await loadStageById(stageList[0].id);
+    } else {
+      sel.innerHTML = '<option value="">ステージなし</option>';
+      buildDefault(); refreshAll();
+    }
+  } catch(e) {
+    sel.innerHTML = '<option value="">読み込みエラー</option>';
+    console.error('ステージ一覧の取得に失敗:', e);
+    buildDefault(); refreshAll();
+  }
+}
+
+// 特定のステージをGASから読み込んで表示
+async function loadStageById(id) {
+  if (!id || !GAS_URL) return;
+  try {
+    const res = await fetch(GAS_URL + '?action=get&id=' + encodeURIComponent(id));
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+    applyStageData(json.stage);
+  } catch(e) {
+    console.error('ステージ読み込みエラー:', e);
+  }
+}
+
+// ステージデータを適用
+function applyStageData(stage) {
+  blocks = {};
+  if (stage.blocks) {
+    Object.assign(blocks, stage.blocks);
+  }
+  if (stage.startPos) startPos = {...stage.startPos};
+  if (stage.goalPos)  goalPos  = {...stage.goalPos};
+  refreshAll();
+  resetGame();
+}
+
+// ===== 起動 =====
+onResize();
+animate(0);
+loadStageList();
+</script>
+</body>
+</html>
