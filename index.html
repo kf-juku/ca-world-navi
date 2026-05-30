@@ -5,130 +5,828 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>CAワールドナビ</title>
 <style>
+/* ===== CAワールドナビ — Clean Dark UI v4 ===== */
+:root{
+  --accent:   #5a9a35;   /* マイクラ草緑 */
+  --accent-h: #72c040;   /* ホバー */
+  --accent-d: #3a6820;   /* 暗め */
+  --gold:     #e8c050;
+  --panel-bg: rgba(14,12,10,0.82);
+  --panel-border: rgba(255,255,255,0.10);
+  --panel-border-a: rgba(90,154,53,0.50);
+  --text:     #e8e0d0;
+  --text-dim: rgba(232,224,208,0.55);
+  --font: 'Segoe UI',system-ui,-apple-system,sans-serif;
+  --btn-size: 58px;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;}
-
-/* 全画面canvas */
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 #c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;}
-
-/* オーバーレイUI全体 */
 #ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
 
-/* ヘッダー */
-#hdr{position:absolute;top:0;left:0;right:0;height:36px;background:rgba(0,0,0,0.55);
-  display:flex;align-items:center;justify-content:space-between;padding:0 10px;pointer-events:auto;}
-#hdr h1{font-size:13px;color:#fff;font-family:sans-serif;font-weight:bold;}
-/* mode-btn removed - editor moved to ca-world-navi-editor.html */
+/* ===== ヘッダー ===== */
+#hdr{
+  position:absolute;top:0;left:0;right:0;height:46px;
+  background:rgba(8,6,4,0.90);
+  border-bottom:1px solid rgba(90,154,53,0.35);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;pointer-events:auto;
+}
+#hdr h1{
+  font-size:15px;color:var(--text);font-family:var(--font);
+  font-weight:700;letter-spacing:.3px;
+  display:flex;align-items:center;gap:7px;
+}
+#hdr h1 .icon{
+  width:24px;height:24px;background:var(--accent);border-radius:5px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;
+}
+#stage-sel{
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--panel-border);
+  color:var(--text);padding:5px 10px;border-radius:6px;
+  font-size:12px;font-family:var(--font);font-weight:500;
+  max-width:200px;cursor:pointer;outline:none;
+  transition:border-color .15s;
+}
+#stage-sel:hover,#stage-sel:focus{border-color:var(--panel-border-a);}
 
-/* ステータス */
-#status{position:absolute;top:42px;left:8px;background:rgba(0,0,0,0.6);border:1px solid #555;
-  border-radius:4px;padding:5px 9px;font-size:11px;line-height:1.9;font-family:monospace;color:#fff;}
-#status .val{color:#ffcc00;font-weight:bold;}
+/* ===== HUDパネル ===== */
+#status{
+  position:absolute;top:56px;left:10px;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-left:2px solid var(--accent);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border-radius:0 8px 8px 0;
+  padding:7px 12px;font-size:11px;line-height:2;
+  font-family:var(--font);color:var(--text-dim);
+  pointer-events:none;min-width:100px;
+}
+#status .val{color:var(--gold);font-weight:700;font-size:12px;}
 
-/* ログバー */
-#logbar{position:absolute;top:112px;left:8px;
-  background:rgba(0,0,0,0.65);border:1px solid #444;border-radius:4px;
-  padding:4px 6px;font-size:10px;color:#7ec8e3;max-width:120px;min-width:60px;
-  max-height:calc(100vh - 280px);overflow-y:auto;word-break:break-all;font-family:monospace;
-  display:flex;flex-direction:column;gap:1px;pointer-events:auto;}
-#logbar span.ls{background:#1a3a5c;border-radius:2px;padding:1px 3px;display:block;}
+/* ===== キーログ ===== */
+#logbar{
+  position:absolute;top:128px;left:10px;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-left:2px solid rgba(90,154,53,0.4);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border-radius:0 8px 8px 0;
+  padding:6px 8px;font-size:10px;color:#80b860;
+  max-width:110px;min-width:52px;
+  max-height:calc(100vh - 300px);overflow-y:auto;
+  word-break:break-all;font-family:monospace;font-weight:600;
+  display:flex;flex-direction:column;gap:2px;pointer-events:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(90,154,53,0.3) transparent;
+}
+#logbar span.ls{
+  background:rgba(90,154,53,0.12);
+  border-radius:3px;padding:1px 4px;display:block;
+}
 
-/* カメラヒント */
-#camhint{position:absolute;top:42px;right:8px;background:rgba(0,0,0,0.5);
-  border-radius:4px;padding:3px 7px;font-size:10px;color:#aaa;font-family:sans-serif;}
+/* ===== 右上ボタン ===== */
+#cam-controls{
+  position:absolute;top:56px;right:10px;
+  display:flex;flex-direction:column;gap:5px;align-items:flex-end;
+  pointer-events:auto;
+}
+.cam-btn{
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:var(--text-dim);border-radius:7px;
+  padding:6px 11px;font-size:11px;cursor:pointer;
+  font-family:var(--font);font-weight:600;
+  pointer-events:auto;-webkit-tap-highlight-color:transparent;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.cam-btn:hover{color:var(--text);border-color:var(--panel-border-a);background:rgba(90,154,53,0.10);}
+.cam-btn:active{background:rgba(90,154,53,0.18);}
 
-/* ゴールメッセージ */
-#goalmsg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  background:#27ae60;border:3px solid #2ecc71;color:#fff;border-radius:10px;
-  padding:18px 24px;text-align:center;font-size:17px;font-weight:bold;display:none;
-  z-index:20;min-width:240px;pointer-events:auto;font-family:sans-serif;}
-#goalmsg button{margin-top:10px;background:#2ecc71;color:#fff;border:none;border-radius:4px;
-  padding:7px 18px;font-size:13px;cursor:pointer;font-weight:bold;}
-
-/* 編集ヒント */
-#edithint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
-  background:rgba(192,57,43,0.88);border-radius:4px;padding:4px 10px;
-  font-size:11px;display:none;font-family:sans-serif;color:#fff;}
-
-/* ===== 操作ボタン（画面下オーバーレイ） ===== */
-#ctrl{position:absolute;bottom:0;left:0;right:0;
+/* ===== コントローラー全体 ===== */
+#ctrl{
+  position:absolute;bottom:0;left:0;right:0;
   display:flex;align-items:flex-end;justify-content:space-between;
-  padding:0 12px 14px;pointer-events:none;}
+  padding:0 14px 20px;pointer-events:none;
+}
 
-/* 左：十字キー */
-.dpad{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:3px;pointer-events:auto;}
-.dp{background:rgba(40,40,40,0.82);border:2px solid rgba(150,150,150,0.6);color:#fff;
-  border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;user-select:none;transition:background .1s;font-family:sans-serif;}
-.dp:active{background:rgba(100,100,100,0.9);}
-.dp.fwd{background:rgba(41,128,185,0.82);border-color:rgba(52,152,219,0.8);}
-.dp-e{background:transparent!important;border:none!important;pointer-events:none;}
+/* ===== 十字キー ===== */
+.dpad{
+  display:grid;
+  grid-template-columns:repeat(3,var(--btn-size));
+  grid-template-rows:repeat(3,var(--btn-size));
+  gap:4px;pointer-events:auto;
+}
+.dp{
+  background:rgba(20,20,18,0.80);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  color:var(--text);border-radius:12px;
+  font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  transition:background .1s,border-color .1s,transform .07s;
+}
+.dp:hover{background:rgba(40,40,36,0.90);border-color:rgba(255,255,255,0.22);}
+.dp:active{background:rgba(90,154,53,0.30);border-color:var(--accent);transform:scale(.94);}
+.dp.fwd{
+  background:rgba(90,154,53,0.18);
+  border-color:rgba(90,154,53,0.50);color:#a0e060;
+}
+.dp.fwd:active{background:rgba(90,154,53,0.38);border-color:var(--accent-h);}
+.dp-e{background:transparent!important;border:none!important;
+  pointer-events:none;backdrop-filter:none!important;}
 
-/* 中央下：手数・undo・reset */
-.ctrl-mid{display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:auto;padding-bottom:4px;}
-.step-badge{background:rgba(0,0,0,0.7);border:1.5px solid #666;border-radius:6px;
-  padding:4px 12px;font-size:13px;font-weight:bold;color:#ffcc00;font-family:monospace;}
+/* ===== 中央パネル ===== */
+.ctrl-mid{
+  display:flex;flex-direction:column;align-items:center;
+  gap:8px;pointer-events:auto;padding-bottom:4px;
+}
+.step-badge{
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border-radius:8px;padding:6px 18px;
+  font-size:16px;font-weight:800;color:var(--gold);
+  font-family:var(--font);letter-spacing:.5px;
+  min-width:100px;text-align:center;
+}
+.step-badge .step-lbl{
+  font-size:9px;color:var(--text-dim);font-weight:500;
+  margin-right:4px;letter-spacing:.8px;text-transform:uppercase;
+}
 .mid-row{display:flex;gap:6px;}
-.midbtn{background:rgba(40,40,40,0.82);border:2px solid rgba(150,150,150,0.6);color:#fff;
-  border-radius:6px;height:36px;padding:0 12px;font-size:12px;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;font-family:sans-serif;font-weight:bold;}
-.midbtn:active{background:rgba(100,100,100,0.9);}
-.midbtn.rst{background:rgba(120,30,30,0.82);border-color:rgba(192,57,43,0.7);}
+.midbtn{
+  background:rgba(20,20,18,0.80);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  color:var(--text);border-radius:9px;
+  height:40px;padding:0 14px;
+  font-size:12px;font-weight:700;
+  cursor:pointer;font-family:var(--font);
+  -webkit-tap-highlight-color:transparent;
+  transition:background .1s,border-color .1s,transform .07s;
+}
+.midbtn:hover{background:rgba(40,40,36,0.90);border-color:rgba(255,255,255,0.22);}
+.midbtn:active{transform:scale(.95);}
+.midbtn.undo:active{background:rgba(232,192,80,0.20);border-color:rgba(232,192,80,0.50);}
+.midbtn.rst{
+  width:40px;padding:0;border-radius:50%;
+  font-size:16px;
+}
+.midbtn.rst:active{background:rgba(220,60,40,0.25);border-color:rgba(220,80,60,0.50);}
+.midbtn.play-btn{
+  background:rgba(90,154,53,0.18);
+  border-color:rgba(90,154,53,0.45);
+  color:#a0e060;min-width:110px;
+}
+.midbtn.play-btn:hover{background:rgba(90,154,53,0.28);border-color:var(--accent);}
+.midbtn.play-btn:active{background:rgba(90,154,53,0.38);}
 
-/* 右：ABXYボタン */
-.abxy{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:3px;pointer-events:auto;}
-.ab{border:2px solid rgba(150,150,150,0.6);color:#fff;border-radius:50%;font-size:14px;font-weight:bold;
+/* ===== アクションボタン ===== */
+.abxy{
+  display:grid;
+  grid-template-columns:repeat(3,var(--btn-size));
+  grid-template-rows:repeat(3,var(--btn-size));
+  gap:4px;pointer-events:auto;
+}
+.ab{
+  background:rgba(20,20,18,0.80);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  color:var(--text);border-radius:50%;
+  font-size:19px;font-weight:700;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;user-select:none;transition:filter .1s;font-family:sans-serif;}
-.ab:active{filter:brightness(1.5);}
-.ab-e{background:transparent!important;border:none!important;pointer-events:none;}
-.ab-y{background:rgba(39,174,96,0.85);border-color:rgba(46,204,113,0.8);}
-.ab-x{background:rgba(74,60,140,0.85);border-color:rgba(155,89,182,0.8);}
-.ab-b{background:rgba(200,120,20,0.85);border-color:rgba(243,156,18,0.8);}
-.ab-a{background:rgba(192,57,43,0.85);border-color:rgba(231,76,60,0.8);}
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  transition:background .1s,border-color .1s,transform .07s;
+}
+.ab:active{transform:scale(.92);}
+.ab-e{background:transparent!important;border:none!important;
+  pointer-events:none;backdrop-filter:none!important;}
+.ab-y{background:rgba(90,154,53,0.18);border-color:rgba(90,154,53,0.45);color:#a0e060;}
+.ab-y:active{background:rgba(90,154,53,0.38);border-color:var(--accent-h);}
+.ab-x{color:rgba(232,224,208,0.70);}
+.ab-x:active{background:rgba(255,255,255,0.12);}
+.ab-b{color:rgba(232,224,208,0.70);}
+.ab-b:active{background:rgba(255,255,255,0.12);}
+.ab-a{color:rgba(220,100,80,0.85);border-color:rgba(220,100,80,0.25);}
+.ab-a:active{background:rgba(220,80,60,0.20);border-color:rgba(220,100,80,0.50);}
 
-/* 編集ツールバー */
+/* ===== ゴールメッセージ ===== */
+#goalmsg{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(8,18,6,0.96);
+  border:1px solid rgba(90,154,53,0.50);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:16px;color:var(--text);
+  padding:28px 36px;text-align:center;
+  display:none;z-index:20;min-width:280px;pointer-events:auto;
+  font-family:var(--font);
+  box-shadow:0 0 60px rgba(90,154,53,0.15),0 16px 48px rgba(0,0,0,0.8);
+}
+#goalmsg .goal-title{
+  font-size:28px;font-weight:800;color:var(--accent-h);
+  margin-bottom:8px;letter-spacing:.5px;
+}
+#goalmsg .goal-steps{color:var(--gold);font-size:15px;font-weight:700;margin-bottom:4px;}
+#goalmsg #glog{font-size:10px;color:var(--text-dim);margin-top:10px;
+  max-width:280px;word-break:break-all;line-height:1.8;}
+#goalmsg .goal-btns{display:flex;gap:10px;justify-content:center;margin-top:18px;}
+.goal-btn{
+  height:42px;padding:0 22px;border-radius:9px;
+  font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);
+  border:1px solid;transition:background .1s,transform .07s;
+}
+.goal-btn:active{transform:scale(.96);}
+.goal-btn.retry{
+  background:rgba(90,154,53,0.20);border-color:rgba(90,154,53,0.55);color:#a0e060;
+}
+.goal-btn.retry:hover{background:rgba(90,154,53,0.32);}
+.goal-btn.replay{
+  background:rgba(60,100,180,0.18);border-color:rgba(80,130,220,0.40);color:#90c0ff;
+}
+.goal-btn.replay:hover{background:rgba(60,100,180,0.30);}
+
+/* ===== 操作説明モーダル ===== */
+#help-modal{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(10,10,8,0.96);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:14px;padding:22px 24px;
+  min-width:300px;max-width:90vw;
+  display:none;z-index:30;pointer-events:auto;
+  font-family:var(--font);color:var(--text);
+  box-shadow:0 16px 48px rgba(0,0,0,0.85);
+}
+#help-modal h2{
+  font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text);
+  text-align:center;letter-spacing:.3px;
+  border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;
+}
+#help-modal table{width:100%;border-collapse:collapse;font-size:12px;}
+#help-modal tr:nth-child(even) td{background:rgba(255,255,255,0.025);}
+#help-modal td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.06);}
+#help-modal td:first-child{color:var(--accent-h);font-weight:700;white-space:nowrap;width:80px;}
+#help-modal .close-btn{
+  margin-top:14px;width:100%;height:40px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  border-radius:8px;color:var(--text-dim);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--font);
+  transition:background .1s,color .1s;
+}
+#help-modal .close-btn:hover{background:rgba(255,255,255,0.10);color:var(--text);}
+
+/* ===== ステップ再生パネル ===== */
+#replay-ctrl{
+  position:absolute;bottom:204px;left:10px;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-left:2px solid rgba(90,154,53,0.4);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border-radius:0 10px 10px 0;
+  padding:11px 14px;display:none;pointer-events:auto;
+  text-align:center;font-family:var(--font);min-width:230px;
+}
+#replay-ctrl .replay-title{
+  font-size:9px;color:var(--text-dim);margin-bottom:4px;
+  font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+}
+#replay-ctrl .replay-step{
+  font-size:14px;color:var(--gold);font-weight:800;
+  margin-bottom:10px;font-family:monospace;
+}
+#replay-ctrl .replay-btns{display:flex;gap:6px;justify-content:center;}
+.rbtn{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  color:var(--text);border-radius:8px;
+  padding:5px 13px;font-size:18px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .1s,border-color .1s;
+}
+.rbtn:hover{background:rgba(255,255,255,0.10);}
+.rbtn:active{background:rgba(255,255,255,0.16);}
+.rbtn.play{
+  background:rgba(90,154,53,0.18);border-color:rgba(90,154,53,0.45);color:#a0e060;
+}
+.rbtn.play:hover{background:rgba(90,154,53,0.28);}
+.rbtn.stop{
+  background:rgba(200,50,30,0.16);border-color:rgba(200,70,50,0.35);color:#ff8070;
+}
+.rbtn.stop:hover{background:rgba(200,50,30,0.26);}
+#replay-progress{font-size:10px;color:var(--text-dim);margin-top:6px;font-weight:500;}
+
+/* ===== その他 ===== */
+#edithint{
+  position:absolute;bottom:90px;left:50%;transform:translateX(-50%);
+  background:rgba(180,40,20,0.85);border:1px solid rgba(220,60,40,0.50);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border-radius:7px;padding:5px 14px;
+  font-size:11px;display:none;font-family:var(--font);
+  font-weight:600;color:#ffe8e0;
+}
 #edittb{position:absolute;bottom:0;left:0;right:0;display:none;
   grid-template-columns:repeat(5,1fr);gap:4px;padding:8px;
-  background:rgba(0,0,0,0.75);pointer-events:auto;}
-.ebt{background:rgba(60,60,60,0.9);border:2px solid #666;color:#fff;border-radius:4px;
-  height:42px;font-size:11px;cursor:pointer;font-weight:bold;font-family:sans-serif;}
-.ebt.active{background:rgba(192,57,43,0.9);border-color:#e74c3c;}
+  background:rgba(6,4,2,0.95);
+  border-top:1px solid rgba(255,255,255,0.08);pointer-events:auto;}
+.ebt{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);
+  color:var(--text);border-radius:7px;height:44px;
+  font-size:11px;cursor:pointer;font-weight:600;font-family:var(--font);
+  transition:background .1s,border-color .1s;
+}
+.ebt:hover{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.20);}
+.ebt.active{
+  background:rgba(180,40,20,0.30);border-color:rgba(220,60,40,0.50);color:#ff8070;
+}
 
-/* カメラリセット・ヘルプボタン */
-#cam-controls{position:absolute;top:42px;right:8px;display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
-.cam-btn{background:rgba(0,0,0,0.6);border:1.5px solid #666;color:#fff;border-radius:5px;
-  padding:4px 9px;font-size:12px;cursor:pointer;font-family:sans-serif;pointer-events:auto;
-  -webkit-tap-highlight-color:transparent;}
-.cam-btn:active{background:rgba(80,80,80,0.8);}
+/* ===== チュートリアル画面 ===== */
+#tutorial-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background-color:#5b9bd5;
+  background-image:
+    /* 草地（下部） */
+    linear-gradient(180deg,
+      transparent 0%,
+      transparent 62%,
+      #4a8c28 62%,
+      #3d7520 68%,
+      #5aa030 68%,
+      #4a8c28 72%,
+      #3d7520 100%
+    ),
+    #1a1a1f;
+  display:none;z-index:50;
+  font-family:var(--font);color:var(--text);
+  flex-direction:column;align-items:stretch;overflow:hidden;
+  pointer-events:auto;
+}
+#tutorial-overlay.active{display:flex;}
 
-/* 操作説明モーダル */
-#help-modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  background:rgba(20,20,30,0.97);border:2px solid #555;border-radius:10px;
-  padding:18px 20px;min-width:280px;max-width:90vw;display:none;z-index:30;
-  pointer-events:auto;font-family:sans-serif;color:#fff;}
-#help-modal h2{font-size:15px;margin-bottom:12px;color:#ffcc00;text-align:center;}
-#help-modal table{width:100%;border-collapse:collapse;font-size:12px;}
-#help-modal td{padding:5px 8px;border-bottom:1px solid #333;}
-#help-modal td:first-child{color:#7ec8e3;font-weight:bold;white-space:nowrap;}
-#help-modal .close-btn{margin-top:14px;width:100%;background:#444;border:1.5px solid #666;
-  color:#fff;border-radius:5px;padding:7px;font-size:13px;cursor:pointer;}
+/* チュートリアル ヘッダー */
+#tut-hdr{
+  height:46px;
+  background:#111114;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;flex-shrink:0;
+}
+#tut-hdr h1{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;color:#fff;letter-spacing:0.3px;}
+#tut-hdr h1 .icon{width:22px;height:22px;background:rgba(255,255,255,0.10);border-radius:5px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;}
+#tut-back-btn{
+  background:transparent;border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.45);border-radius:6px;padding:5px 12px;
+  font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font);
+  transition:color .15s,border-color .15s,background .15s;
+}
+#tut-back-btn:hover{color:#fff;border-color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.06);}
 
-/* 再生コントロール */
-#replay-ctrl{position:absolute;bottom:180px;left:8px;
-  background:rgba(0,0,0,0.75);border:1.5px solid #555;border-radius:8px;
-  padding:8px 14px;display:none;pointer-events:auto;text-align:center;
-  font-family:sans-serif;min-width:220px;}
-#replay-ctrl .replay-title{font-size:11px;color:#aaa;margin-bottom:6px;}
-#replay-ctrl .replay-step{font-size:13px;color:#ffcc00;font-weight:bold;margin-bottom:8px;font-family:monospace;}
-#replay-ctrl .replay-btns{display:flex;gap:6px;justify-content:center;}
-.rbtn{background:rgba(60,60,60,0.9);border:1.5px solid #666;color:#fff;
-  border-radius:5px;padding:5px 12px;font-size:18px;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;}
-.rbtn:active{background:rgba(100,100,100,0.9);}
-.rbtn.play{background:rgba(39,174,96,0.85);border-color:#2ecc71;}
-.rbtn.stop{background:rgba(192,57,43,0.85);border-color:#e74c3c;}
-#replay-progress{font-size:11px;color:#888;margin-top:5px;}
+/* レベル選択画面 */
+#tut-level-screen{
+  flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:24px;padding:32px 20px;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);
+}
+#tut-level-screen.active{display:flex;}
+#tut-level-screen h2{
+  font-size:18px;font-weight:700;color:#fff;text-align:center;
+  letter-spacing:0.5px;margin:0;
+}
+#tut-level-screen p{
+  font-size:12px;color:rgba(255,255,255,0.55);text-align:center;
+  line-height:1.7;max-width:300px;margin:0;
+}
+.level-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
+.level-card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;
+  padding:16px 20px;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .1s;
+  display:flex;align-items:center;gap:14px;
+}
+.level-card:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.30);transform:translateY(-1px);}
+.level-card:active{transform:scale(.98);}
+.level-card .lv-num{
+  font-size:28px;font-weight:900;color:rgba(255,255,255,0.20);
+  line-height:1;flex-shrink:0;font-family:monospace;min-width:36px;
+}
+.level-card .lv-body{flex:1;}
+.level-card .lv-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;}
+.level-card .lv-commands{font-size:11px;color:rgba(255,255,255,0.45);font-family:monospace;margin-bottom:2px;}
+.level-card .lv-desc{font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5;}
+.level-card .lv-arrow{color:rgba(255,255,255,0.25);font-size:16px;flex-shrink:0;}
+
+/* 問題画面 */
+#tut-quiz-screen{
+  flex:1;display:none;flex-direction:column;overflow:hidden;
+}
+#tut-quiz-screen.active{display:flex;}
+#tut-quiz-body{
+  flex:1;display:flex;flex-direction:row;overflow:hidden;
+}
+#tut-main-col{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* 問題ヘッダー */
+#tut-quiz-hdr{
+  background:#16161a;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  padding:8px 16px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+#tut-progress{font-size:11px;color:rgba(255,255,255,0.40);font-weight:500;}
+#tut-level-badge{
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);
+  color:rgba(255,255,255,0.70);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:600;
+}
+
+/* 問題文エリア */
+#tut-question{
+  background:#1e1e24;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  padding:14px 18px;flex-shrink:0;
+  font-size:13px;line-height:1.7;color:rgba(255,255,255,0.90);
+  min-height:60px;
+}
+#tut-question .q-label{font-size:9px;color:rgba(255,255,255,0.35);font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
+#tut-question .q-text{font-size:14px;font-weight:600;color:#fff;}
+
+/* 組み立てエリア */
+#tut-build-area{
+  flex:1;overflow-y:auto;padding:12px 14px;
+  display:flex;flex-direction:column;gap:8px;
+  min-height:80px;
+  background:rgba(6,8,4,0.60);
+  scrollbar-width:thin;scrollbar-color:rgba(90,154,53,0.3) transparent;
+}
+#tut-build-area .build-placeholder{
+  color:var(--text-dim);font-size:12px;text-align:center;
+  padding:20px;opacity:0.5;
+}
+
+/* ===== Scratchブロック ===== */
+
+/* 組み立てエリア */
+#tut-build-area{
+  flex:1;overflow-y:auto;padding:16px 14px;
+  display:flex;flex-direction:column;gap:12px;
+  background-color:#7a7a7a;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(0,0,0,0.20) 31px, rgba(0,0,0,0.20) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(0,0,0,0.20) 47px, rgba(0,0,0,0.20) 48px);
+  background-size:48px 32px;
+  scrollbar-width:thin;scrollbar-color:rgba(150,150,150,0.5) transparent;
+}
+#tut-build-area .build-placeholder{
+  color:var(--text-dim);font-size:13px;text-align:center;
+  padding:30px;opacity:0.5;line-height:2;
+}
+
+/* 1セット＝青ブロック（コの字）＋赤ブロック */
+.scratch-set{
+  display:flex;flex-direction:column;gap:0;
+  position:relative;width:100%;max-width:480px;
+  border-radius:8px;
+  outline:2px solid transparent;
+  transition:outline-color .15s;
+  cursor:pointer;
+}
+.scratch-set.selected{
+  outline:2px solid rgba(255,255,255,0.60);
+  box-shadow:0 0 0 4px rgba(255,255,255,0.10);
+}
+/* 右クリックコンテキストメニュー */
+#tut-ctx-menu{
+  position:fixed;z-index:200;
+  background:#1e1e28;border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;padding:4px 0;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);
+  display:none;min-width:140px;
+}
+#tut-ctx-menu.show{display:block;}
+#tut-ctx-menu button{
+  display:block;width:100%;text-align:left;
+  background:none;border:none;color:#fff;
+  font-size:13px;font-weight:500;padding:8px 16px;
+  cursor:pointer;font-family:var(--font);
+  transition:background .1s;
+}
+#tut-ctx-menu button:hover{background:rgba(255,255,255,0.10);}
+/* 赤ブロック：中間（スタック時は角丸なし） */
+.scratch-red.stacked-mid{border-radius:0;}
+/* 追加ドロップゾーン（赤スタック末尾） */
+.red-add-slot{
+  background:rgba(80,40,20,0.40);
+  border:2px dashed rgba(255,120,60,0.30);
+  border-top:none;
+  border-radius:0 0 6px 6px;
+  padding:7px 14px;
+  min-height:36px;
+  display:flex;align-items:center;
+  font-size:11px;color:rgba(255,160,100,0.40);
+  transition:background .15s,border-color .15s;
+}
+.red-add-slot.drag-over{
+  background:rgba(255,120,60,0.15);
+  border-color:rgba(255,160,80,0.70);
+  color:rgba(255,180,120,0.80);
+}
+
+/* 青ブロック（コの字型：上にノッチ） */
+.scratch-blue{
+  background:#2255aa;
+  border-radius:6px 6px 0 0;
+  padding:10px 14px 12px;
+  display:flex;align-items:center;gap:8px;
+  flex-wrap:wrap;
+  position:relative;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.4);
+}
+/* 上ノッチ（突起） */
+.scratch-blue::before{
+  content:'';
+  position:absolute;top:-8px;left:16px;
+  width:24px;height:8px;
+  background:#2255aa;
+  border-radius:4px 4px 0 0;
+}
+.scratch-blue .sb-label{
+  font-size:12px;font-weight:700;color:#c8d8ff;
+  white-space:nowrap;
+}
+.scratch-blue .sb-input-wrap{
+  background:rgba(255,255,255,0.18);
+  border:1.5px solid rgba(255,255,255,0.40);
+  border-radius:14px;
+  padding:3px 10px;min-width:80px;
+  display:inline-flex;align-items:center;
+}
+.scratch-blue input.sb-input{
+  background:transparent;border:none;outline:none;
+  color:#fff;font-size:13px;font-weight:700;
+  font-family:monospace;width:80px;text-align:center;
+}
+.scratch-blue input.sb-input::placeholder{color:rgba(255,255,255,0.30);}
+.scratch-blue .sb-suffix{
+  font-size:12px;font-weight:700;color:#c8d8ff;white-space:nowrap;
+}
+
+/* 赤ブロックのドロップゾーン（凹み部分） */
+.scratch-red-slot{
+  background:rgba(80,40,20,0.60);
+  border:2px dashed rgba(255,120,60,0.40);
+  border-top:none;
+  border-radius:0 0 6px 6px;
+  padding:10px 14px;
+  min-height:46px;
+  display:flex;align-items:center;
+  font-size:12px;color:rgba(255,160,100,0.50);
+  transition:background .15s,border-color .15s;
+  position:relative;
+}
+.scratch-red-slot::before{
+  content:'';
+  position:absolute;bottom:-8px;left:16px;
+  width:24px;height:8px;
+  background:#4466cc;
+  border-radius:0 0 4px 4px;
+  display:none;
+}
+.scratch-red-slot.filled{
+  background:transparent;
+  border:none;
+  padding:0;
+}
+.scratch-red-slot.drag-over{
+  background:rgba(255,120,60,0.15);
+  border-color:rgba(255,160,80,0.70);
+}
+
+/* 赤ブロック（はめ込み済み） */
+.scratch-red{
+  background:#cc3a14;
+  border-radius:0 0 6px 6px;
+  padding:10px 14px;width:100%;
+  font-size:12px;font-weight:700;color:#ffe8e0;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25);
+  position:relative;
+}
+.scratch-red::before{
+  content:'';
+  position:absolute;bottom:-8px;left:16px;
+  width:24px;height:8px;
+  background:#cc3a14;
+  border-radius:0 0 4px 4px;
+}
+.scratch-red .sr-remove{
+  background:none;border:none;color:rgba(255,200,180,0.60);
+  font-size:14px;cursor:pointer;padding:0 0 0 8px;
+  transition:color .1s;
+}
+.scratch-red .sr-remove:hover{color:#fff;}
+
+/* 削除ボタン（セット全体） */
+.scratch-set .set-delete{display:none;} /* ×ボタン非表示 */
+/* ドラッグ中のセット半透明 */
+.scratch-set.dragging{opacity:0.45;}
+/* 赤ブロックドラッグ中：捨てる対象を薄く */
+.scratch-red.dragging-tail{
+  opacity:0.35;
+  filter:grayscale(30%);
+  outline:2px dashed rgba(255,80,60,0.60);
+  outline-offset:-2px;
+}
+/* セット全体をドラッグ可能に見せる */
+.scratch-set .scratch-blue{cursor:grab;}
+.scratch-set .scratch-blue:active{cursor:grabbing;}
+
+/* ===== パレット ===== */
+#tut-palette{
+  background:#111114;
+  border-right:1px solid rgba(255,255,255,0.07);
+  padding:14px 10px;flex-shrink:0;
+  width:120px;min-width:120px;
+  display:flex;flex-direction:column;gap:12px;overflow-y:auto;
+  scrollbar-width:none;
+  position:relative;
+}
+/* ゴミ箱オーバーレイ（ドラッグ中に表示） */
+#tut-trash{
+  position:absolute;inset:0;
+  background:rgba(200,40,20,0.15);
+  border:2px dashed rgba(255,80,60,0.50);
+  border-radius:4px;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:6px;z-index:10;
+  font-size:28px;
+  color:rgba(255,120,100,0.70);
+  transition:background .1s;
+  pointer-events:auto;
+}
+#tut-trash.show{display:flex;}
+#tut-trash.over{background:rgba(200,40,20,0.40);border-color:rgba(255,80,60,0.90);}
+#tut-trash span{font-size:11px;color:rgba(255,150,130,0.80);font-weight:600;}
+#tut-palette .pal-section{display:flex;flex-direction:column;gap:7px;}
+#tut-palette .pal-label{
+  font-size:8px;color:rgba(255,255,255,0.30);font-weight:600;
+  letter-spacing:0.8px;text-transform:uppercase;line-height:1.3;
+  text-align:center;
+}
+.pal-blocks{display:flex;flex-direction:column;gap:6px;align-items:center;}
+
+/* パレット：青ブロック */
+.pal-blue{
+  background:#2255aa;
+  border-radius:6px;
+  padding:8px 6px;
+  font-size:9px;font-weight:700;color:#c8d8ff;
+  cursor:grab;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 2px 4px rgba(0,0,0,0.40);
+  transition:transform .1s,opacity .1s;
+  position:relative;
+  width:98px;text-align:center;line-height:1.4;
+}
+.pal-blue::before{
+  content:'';position:absolute;top:-5px;left:8px;
+  width:14px;height:5px;background:#2255aa;border-radius:3px 3px 0 0;
+}
+.pal-blue:active{transform:scale(.95);opacity:.8;}
+
+/* パレット：赤ブロック */
+.pal-red{
+  background:#cc3a14;
+  border-radius:6px;
+  padding:8px 6px;
+  font-size:9px;font-weight:700;color:#ffe8e0;
+  cursor:grab;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 2px 4px rgba(0,0,0,0.40);
+  transition:transform .1s,opacity .1s;
+  width:98px;text-align:center;line-height:1.4;white-space:normal;
+}
+.pal-red:active{transform:scale(.95);opacity:.8;}
+
+/* パレット青ブロック内モック */
+.pb-input-mock{
+  display:inline-block;
+  background:rgba(255,255,255,0.20);border:1.5px solid rgba(255,255,255,0.50);
+  border-radius:12px;padding:1px 12px;font-family:monospace;font-size:12px;
+  color:rgba(255,255,255,0.60);
+}
+.pb-plus{
+  background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.40);
+  border-radius:50%;width:18px;height:18px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:12px;font-weight:700;
+}
+
+/* 赤ブロック内プルダウン */
+.rb-select{
+  background:#fff;
+  border:1.5px solid rgba(0,0,0,0.25);
+  border-radius:12px;
+  color:#333;font-size:11px;font-weight:700;
+  padding:2px 6px;cursor:pointer;outline:none;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23333'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 5px center;
+  padding-right:18px;
+}
+.rb-num{
+  display:inline-block;
+  background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.50);
+  border-radius:50%;width:20px;height:20px;
+  text-align:center;line-height:17px;font-size:11px;font-weight:700;color:#fff;
+}
+.rb-text{font-size:12px;font-weight:700;color:#ffe8e0;line-height:1.8;flex:1;}
+
+/* パレット赤ブロック内モック */
+.rb-select-mock{
+  display:inline-block;
+  background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.40);
+  border-radius:12px;padding:1px 8px;font-size:11px;color:#ffe8e0;
+}
+.rb-num-mock{
+  display:inline-block;
+  background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.50);
+  border-radius:50%;width:18px;height:18px;
+  text-align:center;line-height:15px;font-size:10px;font-weight:700;
+}
+
+/* 青ブロック ⊕ */
+.sb-plus{
+  background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.40);
+  border-radius:50%;width:18px;height:18px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:12px;font-weight:700;
+}
+
+/* スロットヒント */
+.slot-hint{color:rgba(255,160,100,0.55);font-size:11px;}
+
+/* クイズ下部ボタン */
+#tut-quiz-btns{
+  background:#111114;
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding:10px 14px;flex-shrink:0;
+  display:flex;gap:8px;justify-content:space-between;
+  align-items:center;
+}
+.tut-btn{
+  height:42px;border-radius:8px;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);
+  border:1px solid;transition:background .1s,transform .07s;
+  -webkit-tap-highlight-color:transparent;
+}
+.tut-btn:active{transform:scale(.96);}
+.tut-btn.done{
+  background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.20);
+  color:#fff;padding:0 22px;flex:1;font-size:14px;
+}
+.tut-btn.done:hover{background:rgba(255,255,255,0.16);}
+.tut-btn.undo-btn{
+  background:transparent;border-color:rgba(255,255,255,0.10);
+  color:rgba(255,255,255,0.40);width:44px;font-size:18px;
+}
+.tut-btn.undo-btn:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.70);}
+
+/* フィードバック */
+#tut-feedback{
+  position:fixed;bottom:160px;left:50%;transform:translateX(-50%);
+  border-radius:10px;padding:10px 22px;font-size:14px;font-weight:700;
+  text-align:center;white-space:nowrap;
+  display:none;z-index:60;pointer-events:none;
+}
+#tut-feedback.ok{
+  background:rgba(20,80,20,0.95);border:1px solid rgba(90,154,53,0.70);color:#a0e060;
+}
+#tut-feedback.ng{
+  background:rgba(80,20,10,0.95);border:1px solid rgba(220,80,50,0.70);color:#ff9080;
+}
+
+/* 完了画面 */
+#tut-complete-screen{
+  flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;padding:30px 20px;text-align:center;
+}
+#tut-complete-screen.active{display:flex;}
+#tut-complete-screen .complete-icon{font-size:60px;}
+#tut-complete-screen h2{font-size:24px;font-weight:800;color:var(--accent-h);}
+#tut-complete-screen p{font-size:13px;color:var(--text-dim);line-height:1.7;}
+.tut-btn.back-to-level{
+  background:rgba(90,154,53,0.20);border-color:rgba(90,154,53,0.50);
+  color:#a0e060;padding:0 28px;
+}
+.tut-btn.back-to-level:hover{background:rgba(90,154,53,0.32);}
 </style>
 </head>
 <body>
@@ -136,11 +834,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;}
 <div id="ui">
   <!-- ヘッダー -->
   <div id="hdr">
-    <h1>⛏ CAワールドナビ</h1>
-    <select id="stage-sel" onchange="loadStageById(this.value)"
-      style="background:rgba(30,30,30,0.9);border:1.5px solid #666;color:#fff;
-      padding:3px 8px;border-radius:4px;font-size:12px;font-family:sans-serif;
-      max-width:180px;cursor:pointer;">
+    <h1><span class="icon">⛏</span> CAワールドナビ</h1>
+    <select id="stage-sel" onchange="loadStageById(this.value)">
       <option value="">読み込み中...</option>
     </select>
   </div>
@@ -188,18 +883,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;}
   </div>
   <!-- ゴール -->
   <div id="goalmsg">
-    🎉 ゴール！<br>
-    <span id="gsteps"></span>手でクリア！<br>
-    <div id="glog" style="font-size:10px;margin-top:6px;max-width:280px;word-break:break-all;line-height:1.5;"></div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
-      <button onclick="resetGame()" style="background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold;">もう一度</button>
-      <button onclick="startReplay()" style="background:#3498db;color:#fff;border:none;border-radius:4px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold;">▶ 再生</button>
+    <div class="goal-title">🎉 ゴール！</div>
+    <div class="goal-steps"><span id="gsteps"></span> 手でクリア</div>
+    <div id="glog"></div>
+    <div class="goal-btns">
+      <button class="goal-btn retry" onclick="resetGame()">もう一度</button>
+      <button class="goal-btn replay" onclick="startReplay()">▶ 再生</button>
     </div>
   </div>
 
   <!-- 操作ボタン -->
   <div id="ctrl">
-    <!-- 左十字 -->
+    <!-- 左：十字キー -->
     <div class="dpad">
       <div class="dp-e"></div>
       <button class="dp fwd" ontouchstart="act('fwd')"  onclick="act('fwd')">▲</button>
@@ -209,35 +904,300 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;}
       <button class="dp"     ontouchstart="act('right')"onclick="act('right')">▶</button>
       <div class="dp-e"></div><div class="dp-e"></div><div class="dp-e"></div>
     </div>
-    <!-- 中央 -->
+    <!-- 中央：手数・Undo・再生 -->
     <div class="ctrl-mid">
-      <div class="step-badge">手数: <span id="ov-steps">0</span></div>
+      <div class="step-badge"><span class="step-lbl">STEPS</span><span id="ov-steps">0</span></div>
       <div class="mid-row">
-        <button class="midbtn" ontouchstart="doUndo()" onclick="doUndo()">↩ 戻す</button>
-        <button class="midbtn rst" ontouchstart="resetGame()" onclick="resetGame()">🔄</button>
+        <button class="midbtn undo" ontouchstart="doUndo()" onclick="doUndo()">↩ Undo</button>
+        <button class="midbtn rst"  ontouchstart="resetGame()" onclick="resetGame()">↺</button>
       </div>
       <div class="mid-row">
-        <button class="midbtn" style="background:rgba(41,128,185,0.85);border-color:#3498db;" ontouchstart="startReplay()" onclick="startReplay()">▶ 再生</button>
+        <button class="midbtn play-btn" ontouchstart="startReplay()" onclick="startReplay()">▶ Replay</button>
       </div>
     </div>
-    <!-- 右ABXY -->
+    <!-- 右：アクションボタン -->
     <div class="abxy">
       <div class="ab-e"></div>
-      <button class="ab ab-y" ontouchstart="act('up')"   onclick="act('up')">⬆</button>
+      <button class="ab ab-y" ontouchstart="act('up')"   onclick="act('up')">↑</button>
       <div class="ab-e"></div>
       <button class="ab ab-x" ontouchstart="act('rotL')" onclick="act('rotL')">↺</button>
       <div class="ab-e"></div>
       <button class="ab ab-b" ontouchstart="act('rotR')" onclick="act('rotR')">↻</button>
       <div class="ab-e"></div>
-      <button class="ab ab-a" ontouchstart="act('down')" onclick="act('down')">⬇</button>
+      <button class="ab ab-a" ontouchstart="act('down')" onclick="act('down')">↓</button>
       <div class="ab-e"></div>
     </div>
   </div>
   <!-- 編集機能はca-world-navi-editor.htmlに移動 -->
+
+<!-- チュートリアル画面（3D画面に重なるオーバーレイ） -->
+<div id="tutorial-overlay">
+  <!-- ヘッダー -->
+  <div id="tut-hdr">
+    <h1><span class="icon">⛏</span> CAワールドナビ ― チュートリアル</h1>
+    <button id="tut-back-btn" onclick="closeTutorial()">← ステージへ</button>
+  </div>
+
+  <!-- レベル選択画面 -->
+  <div id="tut-level-screen">
+    <h2><ruby>レベル<rt>れべる</rt></ruby>をえらぼう</h2>
+    <p><ruby>英語<rt>えいご</rt></ruby>の<ruby>命令<rt>めいれい</rt></ruby>ブロックを くみたてる <ruby>練習<rt>れんしゅう</rt></ruby>をしよう！</p>
+    <div class="level-cards">
+      <div class="level-card" onclick="startTutorialLevel(1)">
+        <div class="lv-num">1</div>
+        <div class="lv-body">
+          <div class="lv-title">コマンドをおぼえよう</div>
+          <div class="lv-commands">come / go / right / left / put</div>
+          <div class="lv-desc">1つずつ<ruby>意味<rt>いみ</rt></ruby>をおぼえながら ブロックをくみたてる</div>
+        </div>
+        <div class="lv-arrow">›</div>
+      </div>
+      <div class="level-card" onclick="startTutorialLevel(2)">
+        <div class="lv-num">2</div>
+        <div class="lv-body">
+          <div class="lv-title">いくつかのブロックをつくろう</div>
+          <div class="lv-commands">come / go / right / left / put</div>
+          <div class="lv-desc">たくさんのコマンドブロックを いっしょにくみたてる</div>
+        </div>
+        <div class="lv-arrow">›</div>
+      </div>
+      <div class="level-card" onclick="startTutorialLevel(3)">
+        <div class="lv-num">3</div>
+        <div class="lv-body">
+          <div class="lv-title"><ruby>指示<rt>しじ</rt></ruby>どおりにくみたてよう</div>
+          <div class="lv-commands">come / go / right / left / put</div>
+          <div class="lv-desc"><ruby>問題<rt>もんだい</rt></ruby>をよんで じぶんでコマンドをえらんで くみたてよう</div>
+        </div>
+        <div class="lv-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 問題画面 -->
+  <div id="tut-quiz-screen">
+    <div id="tut-quiz-hdr">
+      <span id="tut-progress">問題 1 / 5</span>
+      <span id="tut-level-badge">Level 1</span>
+    </div>
+    <div id="tut-question">
+      <div class="q-label">ミッション</div>
+      <div class="q-text" id="tut-q-text">問題文がここに表示されます</div>
+    </div>
+    <div id="tut-quiz-body">
+      <div id="tut-palette">
+        <div id="tut-trash">🗑<span>すてる</span></div>
+        <div class="pal-section">
+          <div class="pal-label">チャットコマンド</div>
+          <div class="pal-blocks" id="tut-pal-blue"></div>
+        </div>
+        <div class="pal-section">
+          <div class="pal-label">どうさ</div>
+          <div class="pal-blocks" id="tut-pal-red"></div>
+        </div>
+      </div>
+      <div id="tut-main-col">
+        <div id="tut-build-area">
+          <div class="build-placeholder" id="tut-placeholder">👆 パレットからブロックをえらんで ついかしよう</div>
+        </div>
+        <div id="tut-quiz-btns">
+          <button class="tut-btn undo-btn" onclick="tutUndo()" title="もとにもどす">↩</button>
+          <button class="tut-btn done" onclick="tutCheck()">できた！✓</button>
+        </div>
+        <div id="tut-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右クリックコンテキストメニュー -->
+  <div id="tut-ctx-menu">
+    <button id="ctx-copy">📋 コピー (Ctrl+C)</button>
+    <button id="ctx-dup">＋ 複製</button>
+    <button id="ctx-del">🗑 削除</button>
+  </div>
+
+  <!-- 完了画面 -->
+  <div id="tut-complete-screen">
+    <div class="complete-icon">🎉</div>
+    <h2>チュートリアル かんりょう！</h2>
+    <p id="tut-complete-msg">すべての問題をクリアしました！<br>コマンドをしっかり覚えたね！</p>
+    <button class="tut-btn back-to-level" onclick="showTutLevelScreen()">レベルえらびにもどる</button>
+  </div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+// ===== サウンドエンジン（Web Audio API / マイクラ風） =====
+const SFX = (() => {
+  let ctx = null;
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  // リバーブ用コンボルバ（短いルーム感）
+  function makeReverb(c, secs=0.4, decay=2) {
+    const len = c.sampleRate * secs;
+    const buf = c.createBuffer(2, len, c.sampleRate);
+    for (let ch=0;ch<2;ch++){
+      const d=buf.getChannelData(ch);
+      for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);
+    }
+    const conv=c.createConvolver(); conv.buffer=buf; return conv;
+  }
+
+  // sine/triangleオシレーター＋エンベロープ＋リバーブ
+  function play(freq, type, vol, attackT, decayT, sustainV, releaseT, dur, reverb=false) {
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    const t = c.currentTime;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t+attackT);
+    gain.gain.exponentialRampToValueAtTime(Math.max(sustainV*vol,0.0001), t+attackT+decayT);
+    gain.gain.setValueAtTime(Math.max(sustainV*vol,0.0001), t+dur-releaseT);
+    gain.gain.linearRampToValueAtTime(0.0001, t+dur);
+    osc.connect(gain);
+    if(reverb){
+      const rv=makeReverb(c,0.3,3);
+      const rvGain=c.createGain(); rvGain.gain.value=0.18;
+      gain.connect(rv); rv.connect(rvGain); rvGain.connect(c.destination);
+    }
+    gain.connect(c.destination);
+    osc.start(t); osc.stop(t+dur);
+  }
+
+  // ローパスフィルタ付きノイズ（足音用）
+  function filteredNoise(vol, dur, cutoff=400) {
+    const c = getCtx();
+    const len = Math.ceil(c.sampleRate * dur);
+    const buf = c.createBuffer(1, len, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const src=c.createBufferSource(); src.buffer=buf;
+    const filt=c.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=cutoff;
+    const gain=c.createGain();
+    gain.gain.setValueAtTime(vol, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime+dur);
+    src.connect(filt); filt.connect(gain); gain.connect(c.destination);
+    src.start(); src.stop(c.currentTime+dur);
+  }
+
+  return {
+    // チュートリアル：青ブロック配置（柔らかいポコン）
+    bluePlace() {
+      play(520, 'sine', 0.22, 0.003, 0.06, 0.05, 0.12, 0.22, true);
+      play(780, 'sine', 0.10, 0.005, 0.05, 0.0,  0.08, 0.16);
+    },
+    // チュートリアル：赤ブロックはめる（コトン＋高音ポン）
+    redPlace() {
+      play(300, 'triangle', 0.20, 0.002, 0.04, 0.0, 0.06, 0.12, true);
+      play(600, 'sine',     0.12, 0.003, 0.03, 0.0, 0.05, 0.10);
+    },
+    // 正解：澄んだアルペジオ上昇
+    correct() {
+      [[523,0],[659,80],[784,160],[1047,260]].forEach(([f,t]) =>
+        setTimeout(()=>play(f,'sine',0.18,0.005,0.06,0.2,0.15,0.30,true),t)
+      );
+    },
+    // 不正解：低めのソフトなブー
+    wrong() {
+      play(200, 'triangle', 0.18, 0.01, 0.08, 0.3, 0.15, 0.35);
+      play(150, 'sine',     0.10, 0.01, 0.10, 0.2, 0.12, 0.35);
+    },
+    // 元に戻す：スッと引く感じ
+    undo() {
+      play(400, 'sine', 0.10, 0.002, 0.10, 0.0, 0.06, 0.18);
+      play(280, 'sine', 0.07, 0.003, 0.12, 0.0, 0.06, 0.20);
+    },
+    // ゴミ箱に捨てる：シュッと消える
+    trash() {
+      filteredNoise(0.08, 0.12, 600);
+      play(200, 'sine', 0.08, 0.002, 0.08, 0.0, 0.05, 0.14);
+    },
+    // 3D移動：草を踏む柔らかい音
+    step() {
+      filteredNoise(0.07, 0.10, 350);
+      play(160, 'sine', 0.06, 0.002, 0.04, 0.0, 0.04, 0.09);
+    },
+    // 3D回転：シュッと風
+    rotate() {
+      filteredNoise(0.05, 0.09, 800);
+      play(500, 'sine', 0.08, 0.002, 0.05, 0.0, 0.06, 0.12);
+    },
+    // ゴール：温かみのあるファンファーレ
+    goal() {
+      [[523,0],[659,110],[784,220],[659,330],[784,440],[1047,560]].forEach(([f,t]) =>
+        setTimeout(()=>play(f,'triangle',0.20,0.005,0.06,0.5,0.18,0.35,true),t)
+      );
+      setTimeout(()=>play(1047,'sine',0.22,0.005,0.05,0.7,0.25,0.55,true),820);
+    },
+  };
+})();
+
+// ===== ドラッグゴースト画像生成 =====
+// elements: DOM要素の配列。縦に並べてCanvasに描画しsetDragImageに渡す
+function makeDragGhost(elements, color) {
+  // 各要素の実サイズを取得
+  const rects = elements.map(el => el.getBoundingClientRect());
+  const w = Math.max(...rects.map(r => r.width));
+  const h = rects.reduce((s, r) => s + r.height, 0);
+  const dpr = window.devicePixelRatio || 1;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = (w + 8) * dpr;
+  canvas.height = (h + 8) * dpr;
+  canvas.style.width  = (w + 8) + 'px';
+  canvas.style.height = (h + 8) + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // 影
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur  = 10;
+  ctx.shadowOffsetY = 4;
+
+  let y = 4;
+  elements.forEach((el, idx) => {
+    const r = rects[idx];
+    const bg = idx === 0 ? color : '#cc3a14';
+    // ブロック本体
+    ctx.fillStyle = bg;
+    const radius = 6;
+    const bx = 4, bw = r.width, bh = r.height;
+    ctx.beginPath();
+    ctx.moveTo(bx + radius, y);
+    ctx.lineTo(bx + bw - radius, y);
+    ctx.arcTo(bx+bw, y,      bx+bw, y+bh,    radius);
+    ctx.arcTo(bx+bw, y+bh,   bx,    y+bh,    radius);
+    ctx.arcTo(bx,    y+bh,   bx,    y,        radius);
+    ctx.arcTo(bx,    y,      bx+bw, y,        radius);
+    ctx.closePath();
+    ctx.fill();
+
+    // テキスト（簡易）
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = `bold ${12 * dpr / dpr}px sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(el.textContent.trim().slice(0, 28), bx + 10, y + bh / 2);
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 10;
+
+    y += bh;
+  });
+
+  // canvasをbodyに一時追加（setDragImageに必要）
+  canvas.style.position = 'fixed';
+  canvas.style.top = '-9999px';
+  document.body.appendChild(canvas);
+  setTimeout(() => document.body.removeChild(canvas), 100);
+  return canvas;
+}
+
 // ===== 定数 =====
 const GRID=16,CELL=1;
 const DIRS=['N','E','S','W'];
@@ -417,8 +1377,8 @@ const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x87CEEB);
-scene.fog=new THREE.Fog(0x87CEEB,16,32);
+scene.background=new THREE.Color(0x6ab0d0);
+scene.fog=new THREE.Fog(0x7abde0,20,38);
 const camera=new THREE.PerspectiveCamera(60,1,.1,60);
 scene.add(new THREE.AmbientLight(0xffffff,.72));
 const sun=new THREE.DirectionalLight(0xffffff,.85);
@@ -684,8 +1644,12 @@ function act(a){
   logPos.set(nx,ny,nz);logRot=-(nd*Math.PI/2);
   isMoving=true;
   buildTrail();updateHUD();updateLog();
+  // 効果音
+  if(['fwd','back','left','right','up','down'].includes(a)) SFX.step();
+  else if(a==='rotL'||a==='rotR') SFX.rotate();
   if(player.x===goalPos.x&&player.y===goalPos.y&&player.z===goalPos.z){
     cleared=true;
+    SFX.goal();
     document.getElementById('gsteps').textContent=actionLog.length;
     document.getElementById('glog').innerHTML=compressLog(actionLog).map(({a,n})=>
       AL[a]+(n>1?`×${n}`:'')
@@ -705,7 +1669,7 @@ function resetGame(){
   history=[];actionLog=[];cleared=false;
   document.getElementById('goalmsg').style.display='none';
   logPos.set(startPos.x,startPos.y,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
-  drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;
+  drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;isMoving=false;
   buildTrail();updateHUD();updateLog();
   orbit.theta=dirToTheta(startPos.dir);orbit.target.copy(logPos);updateCam();
 }
@@ -885,6 +1849,18 @@ function replayStop(){
 
 // ===== キーボード =====
 document.addEventListener('keydown',e=>{
+  // チュートリアル表示中はキー操作を3Dに渡さない
+  if(document.getElementById('tutorial-overlay').classList.contains('active')) {
+    // Ctrl+C: 選択セットをコピー
+    if((e.ctrlKey||e.metaKey) && e.key==='c' && selectedSetIdx>=0) {
+      copySet(selectedSetIdx); return;
+    }
+    // Ctrl+V: コピー済みセットをペースト
+    if((e.ctrlKey||e.metaKey) && e.key==='v') {
+      pasteSet(); return;
+    }
+    return;
+  }
   const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'rotL',ArrowRight:'rotR',w:'fwd',s:'back',a:'left',d:'right',q:'rotL',e:'rotR',' ':'up',z:'undo'};
   if(m[e.key]==='undo'){doUndo();return;}
   if(m[e.key]){e.preventDefault();act(m[e.key]);}
@@ -911,19 +1887,23 @@ function animate(ts){
   while(dr>Math.PI)dr-=Math.PI*2;while(dr<-Math.PI)dr+=Math.PI*2;
   drawRot+=dr*lf;
 
-  // 歩行アニメーション
-  const moving=drawPos.distanceTo(logPos)>0.02;
-  if(moving)walkTime+=dt*0.18;
-  const swing=moving?Math.sin(walkTime*Math.PI*2)*0.45:0;
-  const bob=moving?Math.abs(Math.sin(walkTime*Math.PI*2))*0.04:0;
+  // 歩行アニメーション（1ステップ = 0.35秒）
+  // dt はフレーム数換算(60fps=1)なので、秒換算は dt/60
+  const STEP_DUR = 0.35; // ステップ1回の秒数
+  if(isMoving) walkTime += (dt/60) / STEP_DUR; // 0→1に正規化
+  if(walkTime >= 1){ walkTime=0; isMoving=false; }
+  // 三角波: 0→1→0
+  const stepPhase = walkTime < 0.5 ? walkTime*2 : (1-walkTime)*2;
+  const swing = Math.sin(stepPhase * Math.PI) * 0.55; // 最大55°
+  const bob   = stepPhase * 0.04;
 
   if(steveGroup){
     steveGroup.position.set(drawPos.x,drawPos.y+bob,drawPos.z);
     steveGroup.rotation.y=drawRot;
-    if(steveArm_L) steveArm_L.rotation.x=swing;
+    if(steveArm_L) steveArm_L.rotation.x= swing;
     if(steveArm_R) steveArm_R.rotation.x=-swing;
     if(steveLeg_L) steveLeg_L.rotation.x=-swing;
-    if(steveLeg_R) steveLeg_R.rotation.x=swing;
+    if(steveLeg_R) steveLeg_R.rotation.x= swing;
     // カメラターゲット追従
     orbit.target.lerp(drawPos,lf*.6);
     updateCam();
@@ -941,41 +1921,46 @@ let stageList = [];
 // ステージ一覧をGASから取得してドロップダウンを更新
 async function loadStageList() {
   const sel = document.getElementById('stage-sel');
+  // チュートリアルを先頭に固定
+  sel.innerHTML = '<option value="tutorial">🎮 チュートリアル</option>';
+
   if (!GAS_URL) {
-    sel.innerHTML = '<option value="">（GAS未設定）</option>';
-    buildDefault(); refreshAll();
+    sel.innerHTML += '<option value="">（GAS未設定）</option>';
+    openTutorial();
     return;
   }
   try {
-    sel.innerHTML = '<option value="">読み込み中...</option>';
     const res = await fetch(GAS_URL + '?action=list');
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
     stageList = json.stages;
-    sel.innerHTML = stageList.map(s =>
-      `<option value="${s.id}">${s.id} ${s.name ? '- ' + s.name : ''}</option>`
-    ).join('');
+    stageList.forEach(s => {
+      sel.innerHTML += `<option value="${s.id}">${s.id} ${s.name ? '- ' + s.name : ''}</option>`;
+    });
     // URLパラメータ ?stage=xxx があればそのステージを選択
     const params = new URLSearchParams(location.search);
     const stageId = params.get('stage');
-    if (stageId && stageList.find(s => s.id === stageId)) {
+    if (stageId === 'tutorial') {
+      sel.value = 'tutorial';
+      openTutorial();
+    } else if (stageId && stageList.find(s => s.id === stageId)) {
       sel.value = stageId;
       await loadStageById(stageId);
-    } else if (stageList.length > 0) {
-      await loadStageById(stageList[0].id);
     } else {
-      sel.innerHTML = '<option value="">ステージなし</option>';
-      buildDefault(); refreshAll();
+      // デフォルトはチュートリアル
+      sel.value = 'tutorial';
+      openTutorial();
     }
   } catch(e) {
-    sel.innerHTML = '<option value="">読み込みエラー</option>';
     console.error('ステージ一覧の取得に失敗:', e);
-    buildDefault(); refreshAll();
+    sel.value = 'tutorial';
+    openTutorial();
   }
 }
 
 // 特定のステージをGASから読み込んで表示
 async function loadStageById(id) {
+  if (id === 'tutorial') { openTutorial(); return; }
   if (!id || !GAS_URL) return;
   try {
     const res = await fetch(GAS_URL + '?action=get&id=' + encodeURIComponent(id));
@@ -997,6 +1982,457 @@ function applyStageData(stage) {
   if (stage.goalPos)  goalPos  = {...stage.goalPos};
   refreshAll();
   resetGame();
+}
+
+
+// ===== チュートリアル機能 =====
+
+// 赤ブロック定義（教育版マイクラに合わせた4種類）
+// type: 'come'|'go'|'turn'|'put'
+// cmd:  判定に使うコマンド名（come/go/right/left/put）
+const RED_BLOCKS = {
+  come: {
+    type: 'come',
+    render: () => `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を<ruby>自分<rt>じぶん</rt></ruby>の<ruby>位置<rt>いち</rt></ruby>にもどす</span>`
+  },
+  go: {
+    type: 'go',
+    render: (dir='前') => `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を ${mkSelect('go-dir',['前','後','左','右'],dir)} に <span class="rb-num">1</span> ブロック<ruby>移動<rt>いどう</rt></ruby>させる</span>`
+  },
+  turn: {
+    type: 'turn',
+    render: (dir='左') => `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>の<ruby>向<rt>む</rt></ruby>きを ${mkSelect('turn-dir',['左','右'],dir)} に<ruby>変<rt>か</rt></ruby>える</span>`
+  },
+  put: {
+    type: 'put',
+    render: (dir='前') => `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>に ${mkSelect('put-dir',['前','後','左','右'],dir)} へ <ruby>置<rt>お</rt></ruby>かせる</span>`
+  }
+};
+
+// プルダウン生成ヘルパー
+function mkSelect(cls, options, selected) {
+  const opts = options.map(o => `<option${o===selected?' selected':''}>${o}</option>`).join('');
+  return `<select class="rb-select ${cls}">${opts}</select>`;
+}
+
+// コマンド→赤ブロックtype・デフォルト方向のマッピング
+const CMD_TO_RED = {
+  come:  { type:'come',  dir:null },
+  go:    { type:'go',    dir:'前' },
+  right: { type:'turn',  dir:'右' },
+  left:  { type:'turn',  dir:'左' },
+  put:   { type:'put',   dir:'前' }
+};
+
+// 問題データ
+// answer/answers: コマンド名（come/go/right/left/put）の配列
+const TUT_QUESTIONS = {
+  1: [
+    { text: '「come」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>を じぶんの ばしょに よびもどす コマンドです。<br>あおいブロックに <b>come</b> と うって、あかいブロックを はめてみよう！', answers:['come'], hint:true },
+    { text: '「go」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>を まえに うごかす コマンドです。<br>あおいブロックに <b>go</b> と うって、あかいブロックを はめてみよう！', answers:['go'], hint:true },
+    { text: '「right」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の むきを みぎに かえる コマンドです。<br>あおいブロックに <b>right</b> と うって、あかいブロックのプルダウンを「<ruby>右<rt>みぎ</rt></ruby>」に してみよう！', answers:['right'], hint:true },
+    { text: '「left」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の むきを ひだりに かえる コマンドです。<br>あおいブロックに <b>left</b> と うって、あかいブロックを はめてみよう！', answers:['left'], hint:true },
+    { text: '「put」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の まえに ブロックを おく コマンドです。<br>あおいブロックに <b>put</b> と うって、あかいブロックを はめてみよう！', answers:['put'], hint:true }
+  ],
+  2: [
+    { text: '「come」と「go」の ブロックを 2つ つくってみよう！', answers:['come','go'], hint:false },
+    { text: '「right」と「left」の ブロックを 2つ つくってみよう！', answers:['right','left'], hint:false },
+    { text: '「go」と「put」の ブロックを 2つ つくってみよう！', answers:['go','put'], hint:false }
+  ],
+  3: [
+    { text: '<ruby>エージェント<rt>えーじぇんと</rt></ruby>をよんで、まえに 1ブロック うごかして、ブロックをおこう！<br><small style="color:var(--text-dim)">ひつような コマンドを じぶんで えらんでね</small>', answers:['come','go','put'], hint:false },
+    { text: '<ruby>エージェント<rt>えーじぇんと</rt></ruby>をよんで、みぎを むかせて、まえに 1ブロック うごかそう！<br><small style="color:var(--text-dim)">ひつような コマンドを じぶんで えらんでね</small>', answers:['come','right','go'], hint:false },
+    { text: '<ruby>エージェント<rt>えーじぇんと</rt></ruby>をよんで、ひだりを むかせて、まえに 1ブロック うごかして、ブロックをおこう！<br><small style="color:var(--text-dim)">ひつような コマンドを じぶんで えらんでね</small>', answers:['come','left','go','put'], hint:false }
+  ]
+};
+
+// 状態
+let tutLevel = 1;
+let tutQIndex = 0;
+// sets: [{inputVal:'', redType:'', redDir:''}]
+let tutSets = [];
+let tutHistory = [];
+let dragInfo = null;
+
+// ===== 画面制御 =====
+function openTutorial() {
+  document.getElementById('tutorial-overlay').classList.add('active');
+  showTutLevelScreen();
+}
+function closeTutorial() {
+  document.getElementById('tutorial-overlay').classList.remove('active');
+  const sel = document.getElementById('stage-sel');
+  const firstNormal = Array.from(sel.options).find(o => o.value && o.value !== 'tutorial');
+  if (firstNormal) { sel.value = firstNormal.value; loadStageById(firstNormal.value); }
+}
+function showTutLevelScreen() {
+  document.getElementById('tut-level-screen').classList.add('active');
+  document.getElementById('tut-quiz-screen').classList.remove('active');
+  document.getElementById('tut-complete-screen').classList.remove('active');
+}
+function startTutorialLevel(level) {
+  tutLevel = level;
+  tutQIndex = 0;
+  document.getElementById('tut-level-screen').classList.remove('active');
+  document.getElementById('tut-complete-screen').classList.remove('active');
+  showTutQuestion();
+}
+function showTutQuestion() {
+  const qs = TUT_QUESTIONS[tutLevel];
+  const q  = qs[tutQIndex];
+  document.getElementById('tut-progress').textContent = 'もんだい ' + (tutQIndex+1) + ' / ' + qs.length;
+  document.getElementById('tut-level-badge').textContent = 'Level ' + tutLevel;
+  document.getElementById('tut-q-text').innerHTML = q.text;
+  tutSets = [];
+  tutHistory = [];
+  renderBuildArea();
+  renderPalette();
+  document.getElementById('tut-quiz-screen').classList.add('active');
+  hideFeedback();
+  setupTrash();
+}
+
+// ===== パレット描画 =====
+function renderPalette() {
+  // 青ブロック
+  const blueEl = document.getElementById('tut-pal-blue');
+  blueEl.innerHTML = '';
+  const blueBtn = document.createElement('div');
+  blueBtn.className = 'pal-blue';
+  blueBtn.innerHTML = '<ruby>チャット<rt>ちゃっと</rt></ruby>コマンド<br><span class="pb-input-mock">　　</span><br><span class="pb-plus">⊕</span>';
+  blueBtn.draggable = true;
+  blueBtn.addEventListener('dragstart', e => { dragInfo={type:'blue'}; e.dataTransfer.effectAllowed='copy'; });
+  blueEl.appendChild(blueBtn);
+
+  // 赤ブロック4種
+  const redEl = document.getElementById('tut-pal-red');
+  redEl.innerHTML = '';
+  const palDefs = [
+    { key:'come',  label:'<ruby>エージェント<rt>えーじぇんと</rt></ruby>を<ruby>自分<rt>じぶん</rt></ruby>の<ruby>位置<rt>いち</rt></ruby>にもどす' },
+    { key:'go',    label:'<ruby>エージェント<rt>えーじぇんと</rt></ruby>を <span class="rb-select-mock"><ruby>前<rt>まえ</rt></ruby>▼</span> に <span class="rb-num-mock">1</span> ブロック<ruby>移動<rt>いどう</rt></ruby>させる' },
+    { key:'turn',  label:'<ruby>エージェント<rt>えーじぇんと</rt></ruby>の<ruby>向<rt>む</rt></ruby>きを <span class="rb-select-mock"><ruby>左<rt>ひだり</rt></ruby>▼</span> に<ruby>変<rt>か</rt></ruby>える' },
+    { key:'put',   label:'<ruby>エージェント<rt>えーじぇんと</rt></ruby>に <span class="rb-select-mock"><ruby>前<rt>まえ</rt></ruby>▼</span> へ <ruby>置<rt>お</rt></ruby>かせる' }
+  ];
+  palDefs.forEach(({key, label}) => {
+    const btn = document.createElement('div');
+    btn.className = 'pal-red';
+    btn.innerHTML = label;
+    btn.draggable = true;
+    btn.dataset.redKey = key;
+    btn.addEventListener('dragstart', e => { dragInfo={type:'red', redKey:key}; e.dataTransfer.effectAllowed='copy'; });
+    redEl.appendChild(btn);
+  });
+}
+
+// ===== 組み立てエリア描画 =====
+function renderBuildArea() {
+  const area = document.getElementById('tut-build-area');
+  area.innerHTML = '';
+
+  if (tutSets.length === 0) {
+    area.innerHTML = '<div class="build-placeholder">👆 あおいブロックを ドラッグして ついかしよう<br>あかいブロックを はめこんで かんせい！</div>';
+    setupAreaDrop(area);
+    return;
+  }
+
+  tutSets.forEach((set, i) => {
+    const setEl = document.createElement('div');
+    setEl.className = 'scratch-set' + (selectedSetIdx===i ? ' selected' : '');
+    setEl.draggable = true;
+
+    // setEl 自体はドラッグしない（青・赤それぞれが個別に処理）
+    setEl.draggable = false;
+
+    // セットをクリック/タップで選択
+    setEl.addEventListener('mousedown', e => {
+      if(e.target.closest('.sb-input,.rb-select')) return;
+      selectSet(i);
+    });
+    // 右クリックでコンテキストメニュー
+    setEl.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      selectSet(i);
+      showCtxMenu(e.clientX, e.clientY, i);
+    });
+
+    // 青ブロック
+    const blueEl = document.createElement('div');
+    blueEl.className = 'scratch-blue';
+    const q = TUT_QUESTIONS[tutLevel][tutQIndex];
+    const hintTxt = q.hint ? (q.answers[i] || '') : '';
+    blueEl.innerHTML = `
+      <span class="sb-label"><ruby>チャット<rt>ちゃっと</rt></ruby>コマンド</span>
+      <div class="sb-input-wrap">
+        <input type="text" class="sb-input" placeholder="${hintTxt}"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          value="${set.inputVal || ''}" />
+      </div>
+      <span class="sb-suffix">を<ruby>入力<rt>にゅうりょく</rt></ruby>した<ruby>時<rt>とき</rt></ruby> <span class="sb-plus">⊕</span></span>
+    `;
+    blueEl.querySelector('.sb-input').addEventListener('input', e => {
+      tutSets[i].inputVal = e.target.value.trim().toLowerCase();
+    });
+
+    // 青ブロック：ドラッグでセットごとゴミ箱に
+    blueEl.draggable = true;
+    blueEl.addEventListener('dragstart', e => {
+      if(e.target.closest('.sb-input')) { e.preventDefault(); return; }
+      dragInfo = {type:'set-delete', idx:i};
+      setEl.classList.add('dragging');
+      showTrash();
+      e.dataTransfer.effectAllowed = 'move';
+      // ゴースト：青＋赤全部
+      const targets = [blueEl, ...setEl.querySelectorAll('.scratch-red')];
+      const ghost = makeDragGhost(Array.from(targets), '#2255aa');
+      e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
+    });
+    blueEl.addEventListener('dragend', () => {
+      setEl.classList.remove('dragging');
+      dragInfo = null;
+      hideTrash();
+    });
+    setEl.appendChild(blueEl);
+
+    // 赤ブロック群（複数スタック対応）
+    const reds = set.reds || (set.redKey ? [{redKey:set.redKey,redDir:set.redDir}] : []);
+    // 状態を reds 配列に正規化
+    if (!set.reds) { set.reds = reds; delete set.redKey; delete set.redDir; }
+
+    reds.forEach((r, ri) => {
+      const redEl = document.createElement('div');
+      const isLast = ri === reds.length - 1;
+      redEl.className = 'scratch-red' + (isLast ? '' : ' stacked-mid');
+      const dir = getDefaultDir(r.redKey, r.redDir);
+      redEl.innerHTML = buildRedHTML(r.redKey, dir);
+      redEl.querySelectorAll('select').forEach(sel => {
+        sel.addEventListener('change', e => { set.reds[ri].redDir = e.target.value; });
+      });
+      // 赤ブロックをドラッグ→ゴミ箱で ri 以降を削除
+      redEl.draggable = true;
+      redEl.style.cursor = 'grab';
+      redEl.dataset.ri = ri;
+      redEl.addEventListener('dragstart', e => {
+        dragInfo = {type:'red-slice', setIdx:i, fromRi:ri};
+        // ri以降の赤ブロック全部を dragging-tail にする
+        const tailEls = [];
+        setEl.querySelectorAll('.scratch-red').forEach(el => {
+          if(Number(el.dataset.ri) >= ri) {
+            el.classList.add('dragging-tail');
+            tailEls.push(el);
+          }
+        });
+        showTrash();
+        e.dataTransfer.effectAllowed = 'move';
+        // ゴースト：ri以降の赤全部
+        const ghost = makeDragGhost(tailEls, '#cc3a14');
+        e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
+      });
+      redEl.addEventListener('dragend', () => {
+        setEl.querySelectorAll('.dragging-tail').forEach(el => el.classList.remove('dragging-tail'));
+        if(dragInfo && dragInfo.type==='red-slice') { dragInfo = null; }
+        hideTrash();
+      });
+      setEl.appendChild(redEl);
+    });
+
+    // 赤追加スロット（末尾に常時表示）
+    const addSlot = document.createElement('div');
+    addSlot.className = 'red-add-slot';
+    addSlot.innerHTML = '<span>＋ あかいブロックをここに おとして</span>';
+    addSlot.addEventListener('dragover', e => { if(dragInfo&&dragInfo.type==='red'){e.preventDefault();addSlot.classList.add('drag-over');} });
+    addSlot.addEventListener('dragleave', () => addSlot.classList.remove('drag-over'));
+    addSlot.addEventListener('drop', e => {
+      e.preventDefault(); addSlot.classList.remove('drag-over');
+      if(dragInfo&&dragInfo.type==='red'){
+        saveHistory();
+        set.reds.push({redKey:dragInfo.redKey, redDir:getDefaultDir(dragInfo.redKey,'')});
+        SFX.redPlace();
+        dragInfo=null; renderBuildArea();
+      }
+    });
+    setEl.appendChild(addSlot);
+
+    // ×ボタンなし：セット全体D&Dでゴミ箱削除
+
+    area.appendChild(setEl);
+  });
+
+  setupAreaDrop(area);
+}
+
+function setupAreaDrop(area) {
+  // 青ブロックのD&D：エリアにドロップで追加
+  area.addEventListener('dragover', e => { if(dragInfo&&dragInfo.type==='blue') e.preventDefault(); });
+  area.addEventListener('drop', e => { e.preventDefault(); if(dragInfo&&dragInfo.type==='blue'){addSet();dragInfo=null;} });
+  // エリア空白をクリックで選択解除
+  area.addEventListener('mousedown', e => {
+    if(!e.target.closest('.scratch-set')) { selectedSetIdx=-1; renderBuildArea(); }
+  });
+}
+// どこかクリックでコンテキストメニューを閉じる
+document.addEventListener('click', () => hideCtxMenu());
+
+// ゴミ箱表示・非表示
+function showTrash() {
+  const trash = document.getElementById('tut-trash');
+  if(trash) trash.classList.add('show');
+}
+function hideTrash() {
+  const trash = document.getElementById('tut-trash');
+  if(trash) { trash.classList.remove('show','over'); }
+}
+
+// ゴミ箱のdragover/drop設定（quiz-screen がactiveになったとき1回だけ登録）
+function setupTrash() {
+  const trash = document.getElementById('tut-trash');
+  if(!trash || trash._ready) return;
+  trash._ready = true;
+  trash.addEventListener('dragover', e => {
+    if(dragInfo && (dragInfo.type==='set-delete' || dragInfo.type==='red-slice')) {
+      e.preventDefault(); trash.classList.add('over');
+    }
+  });
+  trash.addEventListener('dragleave', () => trash.classList.remove('over'));
+  trash.addEventListener('drop', e => {
+    e.preventDefault();
+    if(dragInfo && dragInfo.type==='set-delete') {
+      const idx = dragInfo.idx;
+      dragInfo = null; hideTrash();
+      saveHistory();
+      tutSets.splice(idx, 1);
+      if(selectedSetIdx >= tutSets.length) selectedSetIdx = -1;
+      SFX.trash(); renderBuildArea();
+    } else if(dragInfo && dragInfo.type==='red-slice') {
+      const {setIdx, fromRi} = dragInfo;
+      dragInfo = null; hideTrash();
+      saveHistory();
+      tutSets[setIdx].reds.splice(fromRi); // fromRi以降を全削除
+      SFX.trash(); renderBuildArea();
+    }
+  });
+}
+
+// 赤ブロックHTML生成
+function buildRedHTML(key, dir) {
+  switch(key) {
+    case 'come': return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を<ruby>自分<rt>じぶん</rt></ruby>の<ruby>位置<rt>いち</rt></ruby>にもどす</span>`;
+    case 'go':   return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を ${mkSelect('go-dir',['前','後','左','右'],dir||'前')} に <span class="rb-num">1</span> ブロック<ruby>移動<rt>いどう</rt></ruby>させる</span>`;
+    case 'turn': return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>の<ruby>向<rt>む</rt></ruby>きを ${mkSelect('turn-dir',['左','右'],dir||'左')} に<ruby>変<rt>か</rt></ruby>える</span>`;
+    case 'put':  return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>に ${mkSelect('put-dir',['前','後','左','右'],dir||'前')} へ <ruby>置<rt>お</rt></ruby>かせる</span>`;
+    default: return '';
+  }
+}
+
+function getDefaultDir(key, existing) {
+  if (existing) return existing;
+  if (key==='turn') return '左';
+  return '前';
+}
+
+function addSet() {
+  saveHistory();
+  tutSets.push({inputVal:'', reds:[]});
+  SFX.bluePlace();
+  renderBuildArea();
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.sb-input');
+    if (inputs.length > 0) inputs[inputs.length-1].focus();
+  }, 50);
+}
+
+// 選択・コピペ用状態
+let selectedSetIdx = -1;
+let copiedSet = null;
+
+function selectSet(i) {
+  selectedSetIdx = i;
+  renderBuildArea();
+}
+
+function showCtxMenu(x, y, i) {
+  const menu = document.getElementById('tut-ctx-menu');
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+  menu.classList.add('show');
+  document.getElementById('ctx-copy').onclick = () => { copySet(i); hideCtxMenu(); };
+  document.getElementById('ctx-dup').onclick  = () => { dupSet(i);  hideCtxMenu(); };
+  document.getElementById('ctx-del').onclick  = () => { saveHistory(); tutSets.splice(i,1); if(selectedSetIdx>=tutSets.length)selectedSetIdx=-1; SFX.trash(); renderBuildArea(); hideCtxMenu(); };
+}
+function hideCtxMenu() { document.getElementById('tut-ctx-menu').classList.remove('show'); }
+
+function copySet(i) {
+  copiedSet = JSON.parse(JSON.stringify(tutSets[i]));
+}
+function pasteSet() {
+  if (!copiedSet) return;
+  saveHistory();
+  const idx = selectedSetIdx >= 0 ? selectedSetIdx + 1 : tutSets.length;
+  tutSets.splice(idx, 0, JSON.parse(JSON.stringify(copiedSet)));
+  selectedSetIdx = idx;
+  renderBuildArea();
+}
+function dupSet(i) {
+  saveHistory();
+  const copy = JSON.parse(JSON.stringify(tutSets[i]));
+  tutSets.splice(i+1, 0, copy);
+  selectedSetIdx = i+1;
+  renderBuildArea();
+}
+
+function saveHistory() { tutHistory.push(JSON.parse(JSON.stringify(tutSets))); }
+function tutUndo() { if(tutHistory.length===0) return; SFX.undo(); tutSets=tutHistory.pop(); renderBuildArea(); }
+
+// ===== 判定 =====
+function tutCheck() {
+  const q = TUT_QUESTIONS[tutLevel][tutQIndex];
+  const expected = q.answers;
+
+  if (tutSets.length !== expected.length) {
+    SFX.wrong(); showFeedback(false, 'ブロックの かずが ちがうよ！' + expected.length + 'つ つくってね');
+    return;
+  }
+  for (let i = 0; i < expected.length; i++) {
+    const cmd = expected[i];
+    const inp = (tutSets[i].inputVal || '').toLowerCase().trim();
+    if (inp !== cmd) { SFX.wrong(); showFeedback(false, 'スペルが ちがうよ！もういちど たしかめてね 🔍'); return; }
+
+    const reds = tutSets[i].reds || [];
+    const def = CMD_TO_RED[cmd];
+    if (!def) continue;
+    // 赤ブロックが1枚もない
+    if (reds.length === 0) { SFX.wrong(); showFeedback(false, 'あかいブロックが ないよ！はめてみてね 🔍'); return; }
+    // 最初の赤だけ判定（複数スタックの先頭が正解かチェック）
+    const rk = reds[0].redKey;
+    const rd = reds[0].redDir || getDefaultDir(rk,'');
+    if (rk !== def.type) { SFX.wrong(); showFeedback(false, 'あかいブロックが ちがうよ！もういちど たしかめてね 🔍'); return; }
+    if (def.type === 'turn') {
+      const expectedDir = (cmd==='right') ? '右' : '左';
+      if ((rd||'左') !== expectedDir) { SFX.wrong(); showFeedback(false, 'プルダウンの むきが ちがうよ！もういちど たしかめてね 🔍'); return; }
+    }
+  }
+  SFX.correct(); showFeedback(true, 'せいかい！🎉');
+  setTimeout(() => {
+    hideFeedback();
+    const qs = TUT_QUESTIONS[tutLevel];
+    if (tutQIndex+1 < qs.length) { tutQIndex++; showTutQuestion(); }
+    else showTutComplete();
+  }, 1200);
+}
+
+function showFeedback(ok, msg) {
+  const fb = document.getElementById('tut-feedback');
+  fb.className = ok ? 'ok' : 'ng';
+  fb.textContent = msg;
+  fb.style.display = 'block';
+  if (!ok) setTimeout(() => hideFeedback(), 2500);
+}
+function hideFeedback() { document.getElementById('tut-feedback').style.display = 'none'; }
+
+function showTutComplete() {
+  document.getElementById('tut-quiz-screen').classList.remove('active');
+  document.getElementById('tut-complete-screen').classList.add('active');
+  document.getElementById('tut-complete-msg').innerHTML =
+    'Level ' + tutLevel + ' の もんだいを ぜんぶクリア！<br>コマンドを しっかり おぼえたね！🌟';
 }
 
 // ===== 起動 =====
