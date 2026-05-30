@@ -569,7 +569,7 @@ function buildMarkers(){
   const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xffffff}));
   sHead.rotation.x=-Math.PI/2;sHead.position.set(0,.12,-.38);startMesh.add(sHead);
   startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);
-  startMesh.rotation.y=(startPos.dir||0)*Math.PI/2;
+  startMesh.rotation.y=-((startPos.dir||0)*Math.PI/2);
   scene.add(startMesh);
   // ゴール
   goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y-.52,goalPos.z);scene.add(goalMesh);
@@ -627,7 +627,7 @@ ghostMesh=new THREE.Mesh(GEO.block,MAT.ghost);ghostMesh.visible=false;scene.add(
 
 function refreshAll(){
   buildGround();buildBlocks();buildTiles();buildMarkers();buildTrail();
-  logPos.set(player.x,player.y,player.z);logRot=player.dir*Math.PI/2;
+  logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
   drawPos.copy(logPos);drawRot=logRot;
   if(!steveGroup)steveGroup=buildSteve();
   steveGroup.position.copy(drawPos);steveGroup.rotation.y=drawRot;
@@ -681,7 +681,7 @@ function act(a){
   history.push({x:player.x,y:player.y,z:player.z,dir:player.dir});
   actionLog.push(a);
   player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
-  logPos.set(nx,ny,nz);logRot=nd*Math.PI/2;
+  logPos.set(nx,ny,nz);logRot=-(nd*Math.PI/2);
   isMoving=true;
   buildTrail();updateHUD();updateLog();
   if(player.x===goalPos.x&&player.y===goalPos.y&&player.z===goalPos.z){
@@ -697,15 +697,15 @@ function doUndo(){
   if(!history.length)return;
   const p=history.pop();actionLog.pop();
   player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
-  logPos.set(p.x,p.y,p.z);logRot=p.dir*Math.PI/2;
+  logPos.set(p.x,p.y,p.z);logRot=-(p.dir*Math.PI/2);
   buildTrail();updateHUD();updateLog();
 }
 function resetGame(){
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];actionLog=[];cleared=false;
   document.getElementById('goalmsg').style.display='none';
-  logPos.set(startPos.x,startPos.y,startPos.z);logRot=(startPos.dir||0)*Math.PI/2;
-  drawPos.copy(logPos);drawRot=(startPos.dir||0)*Math.PI/2;walkTime=0;
+  logPos.set(startPos.x,startPos.y,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
+  drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;
   buildTrail();updateHUD();updateLog();
   orbit.theta=dirToTheta(startPos.dir);orbit.target.copy(logPos);updateCam();
 }
@@ -753,12 +753,13 @@ canvas.addEventListener('mousemove',e=>{
 
 // ===== カメラリセット =====
 function dirToTheta(dir){
-  // headFrontは+Z面。rotation.y=dir*π/2のとき顔がどこを向くかの背後
-  // dir=0(北): 顔=+Z, 背後=-Z → theta=0
-  // dir=1(東): 顔=+X, 背後=-X → theta=π/2  (Math.sin(π/2)=1,cos=0 → +X側)... 
-  // ※orbit: x=sin(theta)*sin(phi), z=cos(theta)*sin(phi)
-  // -Z側: theta=0(cos=1→z=+dist) → カメラはz=+dist側 → -Z方向から見る ✓
-  return [0, Math.PI/2, Math.PI, -Math.PI/2][dir||0];
+  // headFrontは-Z面(index5)。rotation.y=-dir*π/2で顔がdir方向を向く
+  // rotation.y = -dir*PI/2 (Three.jsはY軸反時計回りのため符号反転)
+  // dir=0(N):顔=-Z,背後=+Z → theta=0(cam at +Z) ✓
+  // dir=1(E):顔=+X,背後=-X → theta=-π/2(cam at -X) ✓
+  // dir=2(S):顔=+Z,背後=-Z → theta=π(cam at -Z) ✓
+  // dir=3(W):顔=-X,背後=+X → theta=π/2(cam at +X) ✓
+  return [0, -Math.PI/2, Math.PI, Math.PI/2][dir||0];
 }
 function resetCam(){
   orbit.theta=dirToTheta(startPos.dir);orbit.phi=.55;orbit.dist=5.5;
@@ -783,8 +784,8 @@ function startReplay(){
   // プレイヤーをスタートに戻してトレイルをクリア
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];
-  logPos.set(player.x,player.y,player.z);logRot=(startPos.dir||0)*Math.PI/2;
-  drawPos.copy(logPos);drawRot=(startPos.dir||0)*Math.PI/2;
+  logPos.set(player.x,player.y,player.z);logRot=-((startPos.dir||0)*Math.PI/2);
+  drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);
   buildTrail();updateHUD();
   // ゴールメッセージを隠す
   document.getElementById('goalmsg').style.display='none';
@@ -832,7 +833,7 @@ function replayApplyStep(idx){
   }
   actionLog=tempLog;
   logPos.set(player.x,player.y,player.z);
-  logRot=player.dir*Math.PI/2;
+  logRot=-(player.dir*Math.PI/2);
   buildTrail();updateHUD();updateLog();
   updateReplayUI();
 }
@@ -874,7 +875,7 @@ function replayStop(){
     actionLog=[];history=[];
     // ログは消す（再生前のログを再生した=確認済みとして素直にリセット）
     logPos.set(player.x,player.y,player.z);
-    logRot=player.dir*Math.PI/2;
+    logRot=-(player.dir*Math.PI/2);
     drawPos.copy(logPos);drawRot=logRot;
     buildTrail();updateHUD();updateLog();
     replaySavedPlayer=null;
