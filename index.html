@@ -627,7 +627,7 @@ function refreshAll(){
   logPos.set(player.x,player.y,player.z);logRot=player.dir*Math.PI/2;
   drawPos.copy(logPos);drawRot=logRot;
   if(!steveGroup)steveGroup=buildSteve();
-  steveGroup.position.copy(drawPos);steveGroup.rotation.y=drawRot+Math.PI;
+  steveGroup.position.copy(drawPos);steveGroup.rotation.y=drawRot;
   orbit.target.copy(logPos);updateCam();updateHUD();
 }
 function updateHUD(){
@@ -911,7 +911,7 @@ function animate(ts){
 
   if(steveGroup){
     steveGroup.position.set(drawPos.x,drawPos.y+bob,drawPos.z);
-    steveGroup.rotation.y=drawRot+Math.PI;
+    steveGroup.rotation.y=drawRot;
     if(steveArm_L) steveArm_L.rotation.x=swing;
     if(steveArm_R) steveArm_R.rotation.x=-swing;
     if(steveLeg_L) steveLeg_L.rotation.x=-swing;
