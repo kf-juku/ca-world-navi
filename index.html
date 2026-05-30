@@ -44,14 +44,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   font-size:13px;flex-shrink:0;
 }
 #stage-sel{
-  background:rgba(255,255,255,0.06);
+  background:#1a1c22;
   border:1px solid var(--panel-border);
   color:var(--text);padding:5px 10px;border-radius:6px;
   font-size:12px;font-family:var(--font);font-weight:500;
   max-width:200px;cursor:pointer;outline:none;
   transition:border-color .15s;
+  /* ドロップダウン展開時の背景（Chrome/Edge） */
+  color-scheme: dark;
 }
 #stage-sel:hover,#stage-sel:focus{border-color:var(--panel-border-a);}
+#stage-sel option{background:#1a1c22;color:#e8e0d0;}
+#stage-sel option:checked,#stage-sel option:hover{background:#2a4a8a;color:#fff;}
 
 /* ===== HUDパネル ===== */
 #status{
@@ -249,6 +253,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   background:rgba(60,100,180,0.18);border-color:rgba(80,130,220,0.40);color:#90c0ff;
 }
 .goal-btn.replay:hover{background:rgba(60,100,180,0.30);}
+.goal-btn.next{
+  background:rgba(90,154,53,0.28);border-color:rgba(90,154,53,0.65);color:#b0f060;
+  font-size:14px;font-weight:800;
+}
+.goal-btn.next:hover{background:rgba(90,154,53,0.42);}
+.goal-btn.next:disabled{opacity:0.35;cursor:default;}
 
 /* ===== 操作説明モーダル ===== */
 #help-modal{
@@ -827,6 +837,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   color:#a0e060;padding:0 28px;
 }
 .tut-btn.back-to-level:hover{background:rgba(90,154,53,0.32);}
+/* 処理中オーバーレイ */
+#loading-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.55);display:none;z-index:300;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px;
+  backdrop-filter:blur(4px);
+}
+#loading-overlay .spin-ring{
+  width:44px;height:44px;border-radius:50%;
+  border:3px solid rgba(255,255,255,0.15);
+  border-top-color:#7de8a8;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loading-overlay .spin-msg{color:#fff;font-size:14px;font-weight:600;}
 </style>
 </head>
 <body>
@@ -850,6 +875,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   <div id="cam-controls">
     <button class="cam-btn" ontouchstart="resetCam()" onclick="resetCam()">📷 視点リセット</button>
     <button class="cam-btn" ontouchstart="showHelp()" onclick="showHelp()">❓ 操作説明</button>
+    <div style="display:flex;gap:4px;justify-content:flex-end;">
+      <button class="cam-btn" ontouchstart="rotateCamLeft()" onclick="rotateCamLeft()" title="カメラ左回転">◁</button>
+      <button class="cam-btn" ontouchstart="rotateCamRight()" onclick="rotateCamRight()" title="カメラ右回転">▷</button>
+    </div>
   </div>
 
   <!-- 操作説明モーダル -->
@@ -859,9 +888,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
       <tr><td>▲▼◀▶</td><td>前後左右に移動（向いている方向基準）</td></tr>
       <tr><td>↺ ↻</td><td>左右に90度回転</td></tr>
       <tr><td>⬆ ⬇</td><td>上下に移動（階段・段差）</td></tr>
-      <tr><td>↩ 戻す</td><td>一手取り消し</td></tr>
+      <tr><td>↩ 戻す / Ctrl+Z</td><td>一手取り消し</td></tr>
       <tr><td>🔄</td><td>スタートに戻る</td></tr>
+      <tr><td>Space</td><td>上に移動</td></tr>
+      <tr><td>Shift</td><td>下に移動</td></tr>
       <tr><td>📷 視点リセット</td><td>カメラをキャラの後ろに戻す</td></tr>
+      <tr><td>◁ ▷ カメラ回転</td><td>視点を左右に回転</td></tr>
       <tr><td>▶ 再生</td><td>これまでの動きをコマ送りで再生</td></tr>
       <tr><td>ドラッグ</td><td>視点を自由に回転</td></tr>
       <tr><td>ピンチ</td><td>ズームイン・アウト</td></tr>
@@ -889,6 +921,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
     <div class="goal-btns">
       <button class="goal-btn retry" onclick="resetGame()">もう一度</button>
       <button class="goal-btn replay" onclick="startReplay()">▶ 再生</button>
+      <button class="goal-btn next" id="next-stage-btn" onclick="loadNextStage()">次へ ›</button>
     </div>
   </div>
 
@@ -1323,6 +1356,27 @@ const TX={
     for(let i=0;i<s;i+=2){c.fillStyle=i%4===0?'#3a7a2a':'#5a9a4a';c.fillRect(i,0,2,s/4);}
   }),
 };
+// カラーブロックテクスチャ（羊毛ブロック風）
+function mkColorBlockTex(baseCol, shade) {
+  return mkTex((c,s)=>{
+    c.fillStyle = baseCol; c.fillRect(0,0,s,s);
+    c.fillStyle = shade;
+    const p = s/4;
+    for(let r=0;r<4;r++) for(let cc=0;cc<4;cc++)
+      if((r+cc)%2===0) c.fillRect(cc*p+1,r*p+1,p-2,p-2);
+    c.strokeStyle='rgba(0,0,0,0.25)'; c.lineWidth=0.8;
+    for(let i=1;i<4;i++){
+      c.beginPath();c.moveTo(i*p,0);c.lineTo(i*p,s);c.stroke();
+      c.beginPath();c.moveTo(0,i*p);c.lineTo(s,i*p);c.stroke();
+    }
+    c.fillStyle='rgba(255,255,255,0.18)'; c.fillRect(2,2,s/3,s/4);
+  });
+}
+TX.red    = mkColorBlockTex('#c0392b','#a93226');
+TX.blue   = mkColorBlockTex('#2980b9','#2471a3');
+TX.yellow = mkColorBlockTex('#d4ac0d','#b7950b');
+TX.green  = mkColorBlockTex('#27ae60','#1e8449');
+
 const tileCols=['#e74c3c','#3498db','#f39c12','#27ae60','#ecf0f1','#9b59b6','#1abc9c'];
 const tileTex=tileCols.map(col=>mkTex((c,s)=>{
   c.fillStyle=col;c.fillRect(0,0,s,s);
@@ -1335,6 +1389,10 @@ function mat(map,opt={}){return new THREE.MeshLambertMaterial({map,...opt});}
 const MAT={
   stone:mat(TX.stone),
   glass:mat(TX.glass,{transparent:true,opacity:0.55}),
+  red:mat(TX.red),
+  blue:mat(TX.blue),
+  yellow:mat(TX.yellow),
+  green:mat(TX.green),
   grassTop:mat(TX.grassTop),grassSide:mat(TX.grassSide),
   trail:new THREE.MeshLambertMaterial({color:0xffaa00,transparent:true,opacity:0.38}),
   arrowMove:new THREE.MeshLambertMaterial({color:0xffdd00,transparent:true,opacity:0.85}),
@@ -1506,7 +1564,9 @@ function buildBlocks(){
   Object.values(blockMeshes).forEach(m=>scene.remove(m));blockMeshes={};
   Object.entries(blocks).forEach(([k,{type}])=>{
     const[x,y,z]=k.split(',').map(Number);
-    const m=new THREE.Mesh(GEO.block,type==='glass'?MAT.glass:MAT.stone);
+    const colorMats = {glass:MAT.glass, red:MAT.red, blue:MAT.blue, yellow:MAT.yellow, green:MAT.green};
+    const blockMat = colorMats[type] || MAT.stone;
+    const m=new THREE.Mesh(GEO.block, blockMat);
     m.position.set(x,y,z);scene.add(m);blockMeshes[k]=m;
   });
 }
@@ -1622,7 +1682,7 @@ function updateLog(){
 let lastAct=0;
 function act(a){
   const n=Date.now();if(n-lastAct<200)return;lastAct=n;
-  if(cleared||editMode)return;
+  if(cleared||editMode||replayPlaying)return;
   const di=player.dir,dv=DV[DIRS[di]];
   const lv=DV[DIRS[(di+3)%4]],rv=DV[DIRS[(di+1)%4]];
   let nx=player.x,ny=player.y,nz=player.z,nd=player.dir;
@@ -1654,6 +1714,7 @@ function act(a){
     document.getElementById('glog').innerHTML=compressLog(actionLog).map(({a,n})=>
       AL[a]+(n>1?`×${n}`:'')
     ).join(' → ');
+    updateNextBtn();
     document.getElementById('goalmsg').style.display='block';
   }
 }
@@ -1664,6 +1725,31 @@ function doUndo(){
   logPos.set(p.x,p.y,p.z);logRot=-(p.dir*Math.PI/2);
   buildTrail();updateHUD();updateLog();
 }
+function loadNextStage(){
+  const sel = document.getElementById('stage-sel');
+  const curId = sel.value;
+  const idx = stageList.findIndex(s => s.id === curId);
+  if(idx < 0 || idx >= stageList.length - 1){
+    // 次がない場合はボタンをグレーアウト（既にdisabledのはず）
+    return;
+  }
+  const next = stageList[idx + 1];
+  document.getElementById('goalmsg').style.display='none';
+  sel.value = next.id;
+  loadStageById(next.id);
+}
+
+// ゴール時に次ステージの有無でボタンを出し分け
+function updateNextBtn(){
+  const btn = document.getElementById('next-stage-btn');
+  if(!btn) return;
+  const sel = document.getElementById('stage-sel');
+  const curId = sel.value;
+  const idx = stageList.findIndex(s => s.id === curId);
+  btn.disabled = (idx < 0 || idx >= stageList.length - 1);
+  btn.style.display = btn.disabled ? 'none' : '';
+}
+
 function resetGame(){
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];actionLog=[];cleared=false;
@@ -1724,6 +1810,14 @@ function dirToTheta(dir){
   // dir=2(S):顔=+Z,背後=-Z → theta=π(cam at -Z) ✓
   // dir=3(W):顔=-X,背後=+X → theta=π/2(cam at +X) ✓
   return [0, -Math.PI/2, Math.PI, Math.PI/2][dir||0];
+}
+function rotateCamLeft(){
+  orbit.theta += Math.PI / 4;
+  updateCam();
+}
+function rotateCamRight(){
+  orbit.theta -= Math.PI / 4;
+  updateCam();
 }
 function resetCam(){
   orbit.theta=dirToTheta(startPos.dir);orbit.phi=.55;orbit.dist=5.5;
@@ -1861,7 +1955,10 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
-  const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'rotL',ArrowRight:'rotR',w:'fwd',s:'back',a:'left',d:'right',q:'rotL',e:'rotR',' ':'up',z:'undo'};
+  // Ctrl+Z: Undo
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();doUndo();return;}
+  if(replayPlaying)return;
+  const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'rotL',ArrowRight:'rotR',w:'fwd',s:'back',a:'left',d:'right',q:'rotL',e:'rotR',' ':'up',Shift:'down',z:'undo'};
   if(m[e.key]==='undo'){doUndo();return;}
   if(m[e.key]){e.preventDefault();act(m[e.key]);}
 });
@@ -1919,6 +2016,17 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbyhowPdOUg0Rki2XrHnjUTo
 let stageList = [];
 
 // ステージ一覧をGASから取得してドロップダウンを更新
+function showLoading(msg) {
+  const el = document.getElementById('loading-overlay');
+  const msgEl = document.getElementById('loading-msg');
+  if (msgEl) msgEl.textContent = msg || '読み込み中...';
+  if (el) el.style.display = 'flex';
+}
+function hideLoading() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'none';
+}
+
 async function loadStageList() {
   const sel = document.getElementById('stage-sel');
   // チュートリアルを先頭に固定
@@ -1929,6 +2037,7 @@ async function loadStageList() {
     openTutorial();
     return;
   }
+  showLoading('ステージ一覧を読み込み中...');
   try {
     const res = await fetch(GAS_URL + '?action=list');
     const json = await res.json();
@@ -1941,17 +2050,21 @@ async function loadStageList() {
     const params = new URLSearchParams(location.search);
     const stageId = params.get('stage');
     if (stageId === 'tutorial') {
+      hideLoading();
       sel.value = 'tutorial';
       openTutorial();
     } else if (stageId && stageList.find(s => s.id === stageId)) {
       sel.value = stageId;
+      hideLoading();
       await loadStageById(stageId);
     } else {
       // デフォルトはチュートリアル
+      hideLoading();
       sel.value = 'tutorial';
       openTutorial();
     }
   } catch(e) {
+    hideLoading();
     console.error('ステージ一覧の取得に失敗:', e);
     sel.value = 'tutorial';
     openTutorial();
@@ -1962,12 +2075,15 @@ async function loadStageList() {
 async function loadStageById(id) {
   if (id === 'tutorial') { openTutorial(); return; }
   if (!id || !GAS_URL) return;
+  showLoading('ステージを読み込み中...');
   try {
     const res = await fetch(GAS_URL + '?action=get&id=' + encodeURIComponent(id));
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
     applyStageData(json.stage);
+    hideLoading();
   } catch(e) {
+    hideLoading();
     console.error('ステージ読み込みエラー:', e);
   }
 }
@@ -2440,5 +2556,9 @@ onResize();
 animate(0);
 loadStageList();
 </script>
+<div id="loading-overlay">
+  <div class="spin-ring"></div>
+  <div class="spin-msg" id="loading-msg">読み込み中...</div>
+</div>
 </body>
 </html>
