@@ -419,7 +419,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 /* レベル選択画面 */
 #tut-level-screen{
   flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;
-  gap:24px;padding:32px 20px;
+  gap:24px;padding:32px 20px;overflow-y:auto;
   background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);
 }
 #tut-level-screen.active{display:flex;}
@@ -431,26 +431,52 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   font-size:12px;color:rgba(255,255,255,0.55);text-align:center;
   line-height:1.7;max-width:300px;margin:0;
 }
-.level-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
+.level-cards{display:flex;flex-direction:row;gap:14px;width:100%;max-width:1040px;align-items:stretch;}
 .level-card{
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:10px;
-  padding:16px 20px;cursor:pointer;
-  transition:background .15s,border-color .15s,transform .1s;
-  display:flex;align-items:center;gap:14px;
+  border-radius:12px;
+  padding:16px 18px;cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+  display:flex;flex-direction:column;gap:10px;
+  border-left:5px solid;
+  flex:1;min-width:0;
 }
-.level-card:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.30);transform:translateY(-1px);}
+.level-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
 .level-card:active{transform:scale(.98);}
-.level-card .lv-num{
-  font-size:28px;font-weight:900;color:rgba(255,255,255,0.20);
-  line-height:1;flex-shrink:0;font-family:monospace;min-width:36px;
+/* レベル別カラー */
+.level-card.lv1{background:rgba(90,154,53,0.15);border-color:#5a9a35;}
+.level-card.lv2{background:rgba(200,130,30,0.15);border-color:#c88228;}
+.level-card.lv3{background:rgba(200,50,40,0.15);border-color:#c83228;}
+.level-card.lv1:hover{background:rgba(90,154,53,0.25);}
+.level-card.lv2:hover{background:rgba(200,130,30,0.25);}
+.level-card.lv3:hover{background:rgba(200,50,40,0.25);}
+/* ヘッダー行 */
+.lv-header{display:flex;align-items:center;gap:10px;}
+.lv-badge{
+  font-size:11px;font-weight:800;letter-spacing:1px;
+  padding:2px 8px;border-radius:4px;flex-shrink:0;
 }
-.level-card .lv-body{flex:1;}
-.level-card .lv-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;}
-.level-card .lv-commands{font-size:11px;color:rgba(255,255,255,0.45);font-family:monospace;margin-bottom:2px;}
-.level-card .lv-desc{font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5;}
-.level-card .lv-arrow{color:rgba(255,255,255,0.25);font-size:16px;flex-shrink:0;}
+.lv1 .lv-badge{background:rgba(90,154,53,0.35);color:#a0e060;}
+.lv2 .lv-badge{background:rgba(200,130,30,0.35);color:#ffc870;}
+.lv3 .lv-badge{background:rgba(200,50,40,0.35);color:#ff9090;}
+.lv-title{font-size:14px;font-weight:700;color:#fff;flex:1;}
+.lv-stars{font-size:13px;letter-spacing:1px;}
+.lv1 .lv-stars{color:#5a9a35;}
+.lv2 .lv-stars{color:#c88228;}
+.lv3 .lv-stars{color:#c83228;}
+.lv-desc{font-size:11px;color:rgba(255,255,255,0.60);line-height:1.6;padding-left:2px;}
+/* サンプルブロックプレビュー */
+.lv-preview{display:flex;flex-direction:column;gap:3px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.25);}
+.lv-preview-set{display:flex;flex-direction:column;gap:2px;}
+.lv-preview-blue{
+  background:#2255aa;border-radius:4px 4px 0 0;
+  padding:4px 10px;font-size:10px;font-weight:700;color:#c8d8ff;
+}
+.lv-preview-red{
+  background:#cc3a14;border-radius:0 0 4px 4px;
+  padding:4px 10px;font-size:10px;font-weight:700;color:#ffe8e0;
+}
+.lv-preview-sep{height:4px;}
+.lv-arrow-row{display:flex;justify-content:flex-end;color:rgba(255,255,255,0.30);font-size:14px;}
 
 /* 問題画面 */
 #tut-quiz-screen{
@@ -479,15 +505,39 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
 /* 問題文エリア */
 #tut-question{
-  background:#1e1e24;
-  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(30,60,30,0.70);
+  border-left:4px solid var(--accent);
+  border-bottom:1px solid rgba(90,154,53,0.25);
   padding:14px 18px;flex-shrink:0;
-  font-size:13px;line-height:1.7;color:rgba(255,255,255,0.90);
+  font-size:13px;line-height:1.7;color:rgba(255,255,255,0.95);
   min-height:60px;
 }
-#tut-question .q-label{font-size:9px;color:rgba(255,255,255,0.35);font-weight:600;
-  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
-#tut-question .q-text{font-size:14px;font-weight:600;color:#fff;}
+#tut-question .q-label{font-size:10px;color:#80c050;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+#tut-question .q-text{font-size:15px;font-weight:700;color:#fff;line-height:1.6;}
+
+/* キーボードガイド */
+.key-guide{
+  display:flex;gap:4px;flex-wrap:wrap;align-items:center;
+  margin-top:6px;
+}
+.key-guide-label{
+  font-size:10px;color:rgba(255,255,255,0.40);font-weight:600;
+  letter-spacing:.5px;margin-right:2px;
+}
+.key-cap{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#2a2a2a;
+  border:1.5px solid rgba(255,255,255,0.30);
+  border-bottom:3px solid rgba(255,255,255,0.18);
+  border-radius:5px;
+  min-width:22px;height:24px;
+  padding:0 5px;
+  font-size:11px;font-weight:700;color:#fff;
+  font-family:monospace;letter-spacing:.5px;
+  box-shadow:0 2px 0 rgba(0,0,0,0.4);
+  line-height:1;
+}
 
 /* 組み立てエリア */
 #tut-build-area{
@@ -503,6 +553,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 }
 
 /* ===== Scratchブロック ===== */
+
+/* キーボードガイド */
+.key-guide{
+  display:flex;gap:4px;flex-wrap:wrap;align-items:center;
+  margin-top:6px;
+}
+.key-guide-label{
+  font-size:10px;color:rgba(255,255,255,0.40);font-weight:600;
+  letter-spacing:.5px;margin-right:2px;
+}
+.key-cap{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#2a2a2a;
+  border:1.5px solid rgba(255,255,255,0.30);
+  border-bottom:3px solid rgba(255,255,255,0.18);
+  border-radius:5px;
+  min-width:22px;height:24px;
+  padding:0 5px;
+  font-size:11px;font-weight:700;color:#fff;
+  font-family:monospace;letter-spacing:.5px;
+  box-shadow:0 2px 0 rgba(0,0,0,0.4);
+  line-height:1;
+}
 
 /* 組み立てエリア */
 #tut-build-area{
@@ -797,9 +870,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 .rb-num{
   display:inline-block;
   background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.50);
-  border-radius:50%;width:20px;height:20px;
-  text-align:center;line-height:17px;font-size:11px;font-weight:700;color:#fff;
+  border-radius:50%;width:28px;height:28px;
+  text-align:center;line-height:24px;font-size:12px;font-weight:700;color:#fff;
+  -moz-appearance:textfield;
+  padding:0;outline:none;
+  font-family:monospace;
+  cursor:text;
+  vertical-align:middle;
 }
+.rb-num::-webkit-inner-spin-button,.rb-num::-webkit-outer-spin-button{-webkit-appearance:none;}
 .rb-text{font-size:12px;font-weight:700;color:#ffe8e0;line-height:1.8;flex:1;}
 
 /* パレット赤ブロック内モック */
@@ -841,10 +920,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 }
 .tut-btn:active{transform:scale(.96);}
 .tut-btn.done{
-  background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.20);
-  color:#fff;padding:0 22px;flex:1;font-size:14px;
+  background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.35);padding:0 22px;flex:1;font-size:14px;
+  transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
 }
-.tut-btn.done:hover{background:rgba(255,255,255,0.16);}
+.tut-btn.done.ready{
+  background:rgba(90,154,53,0.30);border-color:rgba(90,154,53,0.80);
+  color:#c8f0a0;
+  box-shadow:0 0 12px 2px rgba(90,154,53,0.40);
+  animation:pulse-done 1.4s ease-in-out infinite;
+}
+@media(max-width:768px){
+  .level-cards{flex-direction:column;max-width:400px;}
+  .level-card{flex:none;}
+}
+@keyframes pulse-done{
+  0%,100%{box-shadow:0 0 10px 2px rgba(90,154,53,0.35);}
+  50%{box-shadow:0 0 20px 6px rgba(90,154,53,0.65);}
+}
+.tut-btn.done:hover{background:rgba(255,255,255,0.12);}
+.tut-btn.done.ready:hover{background:rgba(90,154,53,0.45);}
 .tut-btn.undo-btn{
   background:transparent;border-color:rgba(255,255,255,0.10);
   color:rgba(255,255,255,0.40);width:44px;font-size:18px;
@@ -853,27 +948,51 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
 /* フィードバック */
 #tut-feedback{
-  position:fixed;bottom:160px;left:50%;transform:translateX(-50%);
-  border-radius:10px;padding:10px 22px;font-size:14px;font-weight:700;
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);
+  border-radius:16px;padding:18px 36px;font-size:22px;font-weight:800;
   text-align:center;white-space:nowrap;
-  display:none;z-index:60;pointer-events:none;
+  display:none;z-index:200;pointer-events:none;
+  letter-spacing:1px;
+  transition:transform .15s;
 }
+#tut-feedback.show{transform:translate(-50%,-50%) scale(1);}
 #tut-feedback.ok{
-  background:rgba(20,80,20,0.95);border:1px solid rgba(90,154,53,0.70);color:#a0e060;
+  background:rgba(20,90,20,0.97);border:2px solid rgba(90,200,53,0.90);color:#c0ff80;
+  box-shadow:0 0 30px 8px rgba(90,200,53,0.45);
 }
 #tut-feedback.ng{
-  background:rgba(80,20,10,0.95);border:1px solid rgba(220,80,50,0.70);color:#ff9080;
+  background:rgba(90,20,10,0.97);border:2px solid rgba(220,80,50,0.90);color:#ffb0a0;
+  box-shadow:0 0 20px 4px rgba(220,80,50,0.35);
 }
+/* 画面フラッシュ */
+#tut-flash{
+  position:fixed;inset:0;z-index:190;pointer-events:none;
+  background:rgba(90,200,53,0);
+  transition:background .08s;
+}
+#tut-flash.on{background:rgba(90,200,53,0.18);}
 
 /* 完了画面 */
 #tut-complete-screen{
   flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;padding:30px 20px;text-align:center;
+  gap:18px;padding:30px 20px;text-align:center;position:relative;overflow:hidden;
 }
 #tut-complete-screen.active{display:flex;}
-#tut-complete-screen .complete-icon{font-size:60px;}
-#tut-complete-screen h2{font-size:24px;font-weight:800;color:var(--accent-h);}
-#tut-complete-screen p{font-size:13px;color:var(--text-dim);line-height:1.7;}
+#tut-complete-screen .complete-icon{font-size:72px;animation:bounce-icon .6s ease-out;}
+@keyframes bounce-icon{0%{transform:scale(0.3);opacity:0;}70%{transform:scale(1.25);}100%{transform:scale(1);opacity:1;}}
+#tut-complete-screen h2{font-size:28px;font-weight:800;color:#c8f0a0;text-shadow:0 0 20px rgba(90,200,53,0.6);}
+#tut-complete-screen p{font-size:14px;color:rgba(255,255,255,0.75);line-height:1.8;}
+#tut-complete-screen .next-level-btn{
+  background:rgba(90,154,53,0.35);border:2px solid rgba(90,200,53,0.70);
+  color:#c8f0a0;font-size:16px;font-weight:700;padding:12px 32px;border-radius:12px;
+  cursor:pointer;font-family:var(--font);
+  animation:pulse-done 1.4s ease-in-out infinite;
+  margin-top:8px;
+}
+#tut-complete-screen .next-level-btn:hover{background:rgba(90,154,53,0.55);}
+/* 紙吹雪キャンバス */
+#confetti-canvas{position:absolute;inset:0;pointer-events:none;z-index:0;}
+#tut-complete-screen>*:not(#confetti-canvas){position:relative;z-index:1;}
 .tut-btn.back-to-level{
   background:rgba(90,154,53,0.20);border-color:rgba(90,154,53,0.50);
   color:#a0e060;padding:0 28px;
@@ -1007,6 +1126,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
 <!-- チュートリアル画面（3D画面に重なるオーバーレイ） -->
 <div id="tutorial-overlay">
+  <div id="tut-flash"></div>
   <!-- ヘッダー -->
   <div id="tut-hdr">
     <h1><span class="icon">⛏</span> CAワールドナビ ― コード練習</h1>
@@ -1018,32 +1138,60 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
     <h2>コード練習の<ruby>レベル<rt>れべる</rt></ruby>をえらぼう</h2>
     <p><ruby>英語<rt>えいご</rt></ruby>の<ruby>命令<rt>めいれい</rt></ruby>ブロックを くみたてて、<ruby>基本<rt>きほん</rt></ruby>コードを<ruby>練習<rt>れんしゅう</rt></ruby>しよう！</p>
     <div class="level-cards">
-      <div class="level-card" onclick="startTutorialLevel(1)">
-        <div class="lv-num">1</div>
-        <div class="lv-body">
-          <div class="lv-title">コマンドをおぼえよう</div>
-          <div class="lv-commands">come / go / right / left / put</div>
-          <div class="lv-desc">1つずつ<ruby>意味<rt>いみ</rt></ruby>をおぼえながら ブロックをくみたてる</div>
+      <!-- レベル1 -->
+      <div class="level-card lv1" onclick="startTutorialLevel(1)">
+        <div class="lv-header">
+          <span class="lv-badge">LEVEL 1</span>
+          <span class="lv-title">コマンドを1つずつおぼえよう</span>
+          <span class="lv-stars">★☆☆</span>
         </div>
-        <div class="lv-arrow">›</div>
+        <div class="lv-desc">コマンドの<ruby>意味<rt>いみ</rt></ruby>を<ruby>教<rt>おし</rt></ruby>えてもらいながら、青ブロック＋赤ブロックを1セット作る練習だよ</div>
+        <div class="lv-preview">
+          <div class="lv-preview-set">
+            <div class="lv-preview-blue">come を入力した時</div>
+            <div class="lv-preview-red">エージェントを自分の位置にもどす</div>
+          </div>
+        </div>
+        <div class="lv-arrow-row">タップしてスタート ›</div>
       </div>
-      <div class="level-card" onclick="startTutorialLevel(2)">
-        <div class="lv-num">2</div>
-        <div class="lv-body">
-          <div class="lv-title">いくつかのブロックをつくろう</div>
-          <div class="lv-commands">come / go / right / left / put</div>
-          <div class="lv-desc">たくさんのコマンドブロックを いっしょにくみたてる</div>
+      <!-- レベル2 -->
+      <div class="level-card lv2" onclick="startTutorialLevel(2)">
+        <div class="lv-header">
+          <span class="lv-badge">LEVEL 2</span>
+          <span class="lv-title">基本コードのセットを作ろう</span>
+          <span class="lv-stars">★★☆</span>
         </div>
-        <div class="lv-arrow">›</div>
+        <div class="lv-desc">2〜4種類のコマンドブロックを、それぞれ別々に作ろう</div>
+        <div class="lv-preview">
+          <div class="lv-preview-set">
+            <div class="lv-preview-blue">come を入力した時</div>
+            <div class="lv-preview-red">エージェントを自分の位置にもどす</div>
+          </div>
+          <div class="lv-preview-sep"></div>
+          <div class="lv-preview-set">
+            <div class="lv-preview-blue">go を入力した時</div>
+            <div class="lv-preview-red">エージェントを 前 に 1 ブロック移動させる</div>
+          </div>
+        </div>
+        <div class="lv-arrow-row">タップしてスタート ›</div>
       </div>
-      <div class="level-card" onclick="startTutorialLevel(3)">
-        <div class="lv-num">3</div>
-        <div class="lv-body">
-          <div class="lv-title"><ruby>指示<rt>しじ</rt></ruby>どおりにくみたてよう</div>
-          <div class="lv-commands">come / go / right / left / put</div>
-          <div class="lv-desc"><ruby>問題<rt>もんだい</rt></ruby>をよんで じぶんでコマンドをえらんで くみたてよう</div>
+      <!-- レベル3 -->
+      <div class="level-card lv3" onclick="startTutorialLevel(3)">
+        <div class="lv-header">
+          <span class="lv-badge">LEVEL 3</span>
+          <span class="lv-title">むきと回数を指定しよう</span>
+          <span class="lv-stars">★★★</span>
         </div>
-        <div class="lv-arrow">›</div>
+        <div class="lv-desc">むきや回数のプルダウンも自分で設定して、問題通りのコマンドを完成させよう</div>
+        <div class="lv-preview">
+          <div class="lv-preview-set">
+            <div class="lv-preview-blue">right を入力した時</div>
+            <div class="lv-preview-red">エージェントの向きを 右▼ に変える</div>
+            <div class="lv-preview-red" style="background:#a03010;">エージェントを 前▼ に 1 ブロック移動させる</div>
+            <div class="lv-preview-red" style="border-radius:0 0 4px 4px;background:#8a2a08;">エージェントの 前▼ にブロックを置く</div>
+          </div>
+        </div>
+        <div class="lv-arrow-row">タップしてスタート ›</div>
       </div>
     </div>
   </div>
@@ -1092,9 +1240,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
   <!-- 完了画面 -->
   <div id="tut-complete-screen">
+    <canvas id="confetti-canvas"></canvas>
     <div class="complete-icon">🎉</div>
     <h2>コード練習 かんりょう！</h2>
-    <p id="tut-complete-msg">すべての問題をクリアしました！<br>コマンドをしっかり覚えたね！</p>
+    <p id="tut-complete-msg">すべての問題をクリアしました！<br>コマンドをしっかり覚えたね！🌟</p>
+    <button id="next-level-btn" class="next-level-btn" onclick="goNextLevel()" style="display:none">次のレベルに挑戦！ ›</button>
     <button class="tut-btn back-to-level" onclick="showTutLevelScreen()">レベルえらびにもどる</button>
   </div>
 </div>
@@ -2145,7 +2295,7 @@ const RED_BLOCKS = {
   },
   go: {
     type: 'go',
-    render: (dir='前') => `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を ${mkSelect('go-dir',['前','後','左','右'],dir)} に <span class="rb-num">1</span> ブロック<ruby>移動<rt>いどう</rt></ruby>させる</span>`
+    render: (dir='前', count=1) => `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を ${mkSelect('go-dir',['前','後','左','右'],dir)} に <input type="number" class="rb-num" value="${count}" min="1" max="9"> ブロック<ruby>移動<rt>いどう</rt></ruby>させる</span>`
   },
   turn: {
     type: 'turn',
@@ -2178,25 +2328,40 @@ const TUT_QUESTIONS = {
   1: [
     { text: '「come」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>を じぶんの ばしょに よびもどす コマンドです。<br>あおいブロックに <b>come</b> と うって、あかいブロックを はめてみよう！', answers:['come'], hint:true },
     { text: '「go」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>を まえに うごかす コマンドです。<br>あおいブロックに <b>go</b> と うって、あかいブロックを はめてみよう！', answers:['go'], hint:true },
-    { text: '「right」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の むきを みぎに かえる コマンドです。<br>あおいブロックに <b>right</b> と うって、あかいブロックのプルダウンを「<ruby>右<rt>みぎ</rt></ruby>」に してみよう！', answers:['right'], hint:true },
+    { text: '「put」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の まえに ブロックを おく コマンドです。<br>あおいブロックに <b>put</b> と うって、あかいブロックを はめてみよう！', answers:['put'], hint:true },
     { text: '「left」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の むきを ひだりに かえる コマンドです。<br>あおいブロックに <b>left</b> と うって、あかいブロックを はめてみよう！', answers:['left'], hint:true },
-    { text: '「put」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の まえに ブロックを おく コマンドです。<br>あおいブロックに <b>put</b> と うって、あかいブロックを はめてみよう！', answers:['put'], hint:true }
+    { text: '「right」は <ruby>エージェント<rt>えーじぇんと</rt></ruby>の むきを みぎに かえる コマンドです。<br>あおいブロックに <b>right</b> と うって、あかいブロックのプルダウンを「<ruby>右<rt>みぎ</rt></ruby>」に してみよう！', answers:['right'], hint:true }
   ],
   2: [
-    { text: '「come」と「go」の ブロックを 2つ つくってみよう！', answers:['come','go'], hint:false },
-    { text: '「right」と「left」の ブロックを 2つ つくってみよう！', answers:['right','left'], hint:false },
-    { text: '「go」と「put」の ブロックを 2つ つくってみよう！', answers:['go','put'], hint:false }
+    { text: '「<b>come</b>」と「<b>go</b>」の ブロックを <b>1つずつ</b> つくろう！<br>青いブロックを2つ用意して、それぞれに come と go を入れてね。', answers:['come','go'], hint:false },
+    { text: '「<b>left</b>」と「<b>go</b>」の ブロックを <b>1つずつ</b> つくろう！<br>left と go、それぞれ別々に作ってね。', answers:['left','go'], hint:false },
+    { text: '「<b>go</b>」と「<b>put</b>」の ブロックを <b>1つずつ</b> つくろう！<br>青いブロックを2つ用意して、それぞれ入力してね。', answers:['go','put'], hint:false },
+    { text: '「<b>come</b>」「<b>right</b>」「<b>go</b>」の ブロックを <b>1つずつ、3つ</b> つくろう！<br><small style="color:var(--text-dim)">青ブロックを3つ並べて、それぞれに1つずつ入力してね</small>', answers:['come','right','go'], hint:false },
+    { text: '「<b>come</b>」「<b>go</b>」「<b>put</b>」「<b>right</b>」の ブロックを <b>1つずつ、4つ</b> つくろう！<br><small style="color:var(--text-dim)">青ブロックを4つ並べて、それぞれに1つずつ入力してね</small>', answers:['come','go','put','right'], hint:false }
   ],
   3: [
-    { text: '<ruby>エージェント<rt>えーじぇんと</rt></ruby>をよんで、まえに 1ブロック うごかして、ブロックをおこう！<br><small style="color:var(--text-dim)">ひつような コマンドを じぶんで えらんでね</small>', answers:['come','go','put'], hint:false },
-    { text: '<ruby>エージェント<rt>えーじぇんと</rt></ruby>をよんで、みぎを むかせて、まえに 1ブロック うごかそう！<br><small style="color:var(--text-dim)">ひつような コマンドを じぶんで えらんでね</small>', answers:['come','right','go'], hint:false },
-    { text: '<ruby>エージェント<rt>えーじぇんと</rt></ruby>をよんで、ひだりを むかせて、まえに 1ブロック うごかして、ブロックをおこう！<br><small style="color:var(--text-dim)">ひつような コマンドを じぶんで えらんでね</small>', answers:['come','left','go','put'], hint:false }
+    { text: '「<b>come</b>」という命令で、<br>エージェントをよぶ → 前に 1マス 進む<br>コードを組み合わせて作ろう！',
+      answers:['come'], hint:false,
+      expectedReds:[{type:'come'},{type:'go',dir:'前',count:1}] },
+    { text: '「<b>go</b>」という命令で、<br>前に 2マス 進む → 前にブロックを置く<br>コードを組み合わせて作ろう！',
+      answers:['go'], hint:false,
+      expectedReds:[{type:'go',dir:'前',count:2},{type:'put',dir:'前'}] },
+    { text: '「<b>put</b>」という命令で、<br>前にブロックを置く → 前に 1マス 進む → 右を向く<br>コードを組み合わせて作ろう！',
+      answers:['put'], hint:false,
+      expectedReds:[{type:'put',dir:'前'},{type:'go',dir:'前',count:1},{type:'turn',dir:'右'}] },
+    { text: '「<b>left</b>」という命令で、<br>左を向く → エージェントをよぶ → 前に 2マス 進む<br>コードを組み合わせて作ろう！',
+      answers:['left'], hint:false,
+      expectedReds:[{type:'turn',dir:'左'},{type:'come'},{type:'go',dir:'前',count:2}] },
+    { text: '「<b>right</b>」という命令で、<br>右を向く → 前に 1マス 進む → 前にブロックを置く<br>コードを組み合わせて作ろう！',
+      answers:['right'], hint:false,
+      expectedReds:[{type:'turn',dir:'右'},{type:'go',dir:'前',count:1},{type:'put',dir:'前'}] }
   ]
 };
 
 // 状態
 let tutLevel = 1;
 let tutQIndex = 0;
+let tutChecking = false;
 // sets: [{inputVal:'', redType:'', redDir:''}]
 let tutSets = [];
 let tutHistory = [];
@@ -2260,6 +2425,7 @@ function closeTutorial() {
   document.getElementById('tutorial-overlay').classList.remove('active');
 }
 function showTutLevelScreen() {
+  stopConfetti();
   document.getElementById('tut-level-screen').classList.add('active');
   document.getElementById('tut-quiz-screen').classList.remove('active');
   document.getElementById('tut-complete-screen').classList.remove('active');
@@ -2272,6 +2438,7 @@ function startTutorialLevel(level) {
   showTutQuestion();
 }
 function showTutQuestion() {
+  tutChecking = false;
   const qs = TUT_QUESTIONS[tutLevel];
   const q  = qs[tutQIndex];
   document.getElementById('tut-progress').textContent = 'もんだい ' + (tutQIndex+1) + ' / ' + qs.length;
@@ -2363,9 +2530,18 @@ function renderBuildArea() {
       </div>
       <span class="sb-suffix">を<ruby>入力<rt>にゅうりょく</rt></ruby>した<ruby>時<rt>とき</rt></ruby> <span class="sb-plus">⊕</span></span>
     `;
-    blueEl.querySelector('.sb-input').addEventListener('input', e => {
+    const sbInput = blueEl.querySelector('.sb-input');
+    const q_for_guide = TUT_QUESTIONS[tutLevel][tutQIndex];
+    const ans_for_guide = q_for_guide ? (q_for_guide.answers[i] || '') : '';
+    sbInput.addEventListener('input', e => {
       tutSets[i].inputVal = e.target.value.trim().toLowerCase();
+      updateKeyGuide(blueEl, e.target.value.trim(), ans_for_guide);
     });
+    // キーガイドエリア（入力欄の下）
+    const keyGuideEl = document.createElement('div');
+    keyGuideEl.className = 'key-guide';
+    keyGuideEl.innerHTML = buildKeyGuide(set.inputVal || '', ans_for_guide, getKeyGuideMode());
+    blueEl.appendChild(keyGuideEl);
 
     // 青ブロック：ドラッグでセットごとゴミ箱に
     blueEl.draggable = true;
@@ -2399,7 +2575,7 @@ function renderBuildArea() {
       if(dragInfo.type==='red') {
         const key = dragInfo.redKey; dragInfo = null;
         saveHistory();
-        tutSets[i].reds.push({redKey:key, redDir:getDefaultDir(key,'')});
+        tutSets[i].reds.push({redKey:key, redDir:getDefaultDir(key,''), redCount:1});
         SFX.redPlace(); renderBuildArea();
       } else if(dragInfo.type==='red-slice' && dragInfo.setIdx !== i) {
         const {setIdx, fromRi} = dragInfo; dragInfo = null; hideTrash();
@@ -2446,7 +2622,7 @@ function renderBuildArea() {
           const key = dragInfo.redKey;
           dragInfo = null;
           saveHistory();
-          tutSets[targetSetIdx].reds.splice(insertAt, 0, {redKey:key, redDir:getDefaultDir(key,'')});
+          tutSets[targetSetIdx].reds.splice(insertAt, 0, {redKey:key, redDir:getDefaultDir(key,''), redCount:1});
           SFX.redPlace(); renderBuildArea();
         }
       });
@@ -2461,10 +2637,22 @@ function renderBuildArea() {
       const isLast = ri === reds.length - 1;
       redEl.className = 'scratch-red' + (isLast ? '' : ' stacked-mid');
       const dir = getDefaultDir(r.redKey, r.redDir);
-      redEl.innerHTML = buildRedHTML(r.redKey, dir);
+      const cnt = r.redCount || 1;
+      redEl.innerHTML = buildRedHTML(r.redKey, dir, cnt);
       redEl.querySelectorAll('select').forEach(sel => {
         sel.addEventListener('change', e => { set.reds[ri].redDir = e.target.value; });
       });
+      const numInput = redEl.querySelector('input.rb-num');
+      if (numInput) {
+        numInput.addEventListener('change', e => {
+          set.reds[ri].redCount = Math.max(1, Math.min(9, parseInt(e.target.value)||1));
+          e.target.value = set.reds[ri].redCount;
+        });
+        numInput.addEventListener('click', e => { e.stopPropagation(); e.target.select(); });
+        numInput.addEventListener('mousedown', e => e.stopPropagation());
+        numInput.addEventListener('keydown', e => e.stopPropagation());
+        numInput.addEventListener('focus', e => { e.stopPropagation(); e.target.select(); });
+      }
       // 赤ブロックをドラッグ→ゴミ箱 or 挿入ゾーンで移動
       redEl.draggable = true;
       redEl.style.cursor = 'grab';
@@ -2502,6 +2690,55 @@ function renderBuildArea() {
   });
 
   setupAreaDrop(area);
+  updateDoneBtn();
+}
+
+// キーガイド生成
+// mode: 'full'=全文字表示, 'first'=1文字目はヒント+2文字目以降は入力に応じて, 'typed'=打った文字だけ
+function buildKeyGuide(val, answer, mode) {
+  const typed = (val || '').trim();
+  const ans = (answer || '').toLowerCase();
+
+  if (mode === 'full') {
+    // レベル1：答えの全文字を常に表示
+    const keys = ans.toUpperCase().split('');
+    return '<span class="key-guide-label">キー：</span>' + keys.map(k => `<span class="key-cap">${k}</span>`).join('');
+  }
+
+  if (mode === 'first') {
+    // レベル2：1文字目はヒント、2文字目以降は入力した分だけ
+    const firstKey = ans[0] ? ans[0].toUpperCase() : '';
+    let html = '<span class="key-guide-label">キー：</span>';
+    html += `<span class="key-cap" style="opacity:0.55;border-color:rgba(246,224,94,0.5);color:#f6e05e">${firstKey}</span>`;
+    if (typed.length > 1) {
+      const rest = typed.slice(1).toUpperCase().split('');
+      html += rest.map(k => `<span class="key-cap">${k}</span>`).join('');
+    }
+    return html;
+  }
+
+  // レベル3（typed）：打った文字だけ表示
+  if (!typed) return '<span class="key-guide-label">キー：</span><span style="color:rgba(255,255,255,0.20);font-size:11px;">（うつと キーが でるよ）</span>';
+  const keys = typed.toUpperCase().split('');
+  return '<span class="key-guide-label">キー：</span>' + keys.map(k => `<span class="key-cap">${k}</span>`).join('');
+}
+
+function getKeyGuideMode() {
+  if (tutLevel === 1) return 'full';
+  if (tutLevel === 2) return 'first';
+  return 'typed';
+}
+
+function updateKeyGuide(blueEl, val, answer) {
+  const guide = blueEl.querySelector('.key-guide');
+  if (guide) guide.innerHTML = buildKeyGuide(val, answer, getKeyGuideMode());
+}
+
+function updateDoneBtn() {
+  const btn = document.querySelector('.tut-btn.done');
+  if (!btn) return;
+  if (tutSets.length > 0) btn.classList.add('ready');
+  else btn.classList.remove('ready');
 }
 
 function setupAreaDrop(area) {
@@ -2557,10 +2794,10 @@ function setupTrash() {
 }
 
 // 赤ブロックHTML生成
-function buildRedHTML(key, dir) {
+function buildRedHTML(key, dir, count=1) {
   switch(key) {
     case 'come': return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を<ruby>自分<rt>じぶん</rt></ruby>の<ruby>位置<rt>いち</rt></ruby>にもどす</span>`;
-    case 'go':   return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を ${mkSelect('go-dir',['前','後','左','右'],dir||'前')} に <span class="rb-num">1</span> ブロック<ruby>移動<rt>いどう</rt></ruby>させる</span>`;
+    case 'go':   return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>を ${mkSelect('go-dir',['前','後','左','右'],dir||'前')} に <input type="number" class="rb-num" value="${count}" min="1" max="9"> ブロック<ruby>移動<rt>いどう</rt></ruby>させる</span>`;
     case 'turn': return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>の<ruby>向<rt>む</rt></ruby>きを ${mkSelect('turn-dir',['左','右'],dir||'左')} に<ruby>変<rt>か</rt></ruby>える</span>`;
     case 'put':  return `<span class="rb-text"><ruby>エージェント<rt>えーじぇんと</rt></ruby>に ${mkSelect('put-dir',['前','後','左','右'],dir||'前')} へ <ruby>置<rt>お</rt></ruby>かせる</span>`;
     default: return '';
@@ -2628,9 +2865,59 @@ function tutUndo() { if(tutHistory.length===0) return; SFX.undo(); tutSets=tutHi
 
 // ===== 判定 =====
 function tutCheck() {
+  if (tutChecking) return;
   const q = TUT_QUESTIONS[tutLevel][tutQIndex];
   const expected = q.answers;
 
+  // ===== レベル3：青1枚×赤複数スタック判定 =====
+  if (q.expectedReds) {
+    // 青ブロックが1つあるか
+    if (tutSets.length !== 1) {
+      SFX.wrong(); showFeedback(false, '青いブロックは 1つだけ つくってね！');
+      return;
+    }
+    const inp = (tutSets[0].inputVal || '').toLowerCase().trim();
+    if (inp !== expected[0]) {
+      SFX.wrong(); showFeedback(false, 'スペルが ちがうよ！<b>' + expected[0] + '</b> と うってね 🔍');
+      return;
+    }
+    const reds = tutSets[0].reds || [];
+    const exReds = q.expectedReds;
+    if (reds.length !== exReds.length) {
+      SFX.wrong(); showFeedback(false, 'あかいブロックを ' + exReds.length + 'まい はめてね！いま ' + reds.length + 'まい だよ 🔍');
+      return;
+    }
+    for (let j = 0; j < exReds.length; j++) {
+      const er = exReds[j];
+      const rk = reds[j].redKey;
+      const rd = reds[j].redDir || getDefaultDir(rk, '');
+      const rc = reds[j].redCount || 1;
+      if (rk !== er.type) {
+        SFX.wrong(); showFeedback(false, (j+1) + 'まいめの あかいブロックが ちがうよ！もういちど たしかめてね 🔍');
+        return;
+      }
+      if (er.dir !== undefined && er.dir !== null && rd !== er.dir) {
+        SFX.wrong(); showFeedback(false, (j+1) + 'まいめの むきが ちがうよ！「' + er.dir + '」に してね 🔍');
+        return;
+      }
+      if (er.count !== undefined && er.count !== null && rc !== er.count) {
+        SFX.wrong(); showFeedback(false, (j+1) + 'まいめの かずが ちがうよ！「' + er.count + '」に してね 🔍');
+        return;
+      }
+    }
+    tutChecking = true;
+    SFX.correct(); showFeedback(true, 'せいかい！🎉');
+    setTimeout(() => {
+      tutChecking = false;
+      hideFeedback();
+      const qs = TUT_QUESTIONS[tutLevel];
+      if (tutQIndex+1 < qs.length) { tutQIndex++; showTutQuestion(); }
+      else showTutComplete();
+    }, 1200);
+    return;
+  }
+
+  // ===== レベル1・2：青複数ブロック判定（従来ロジック） =====
   if (tutSets.length !== expected.length) {
     SFX.wrong(); showFeedback(false, 'ブロックの かずが ちがうよ！' + expected.length + 'つ つくってね');
     return;
@@ -2638,24 +2925,39 @@ function tutCheck() {
   for (let i = 0; i < expected.length; i++) {
     const cmd = expected[i];
     const inp = (tutSets[i].inputVal || '').toLowerCase().trim();
-    if (inp !== cmd) { SFX.wrong(); showFeedback(false, 'スペルが ちがうよ！もういちど たしかめてね 🔍'); return; }
+    if (inp !== cmd) { SFX.wrong(); showFeedback(false, (i+1) + 'ばんめの スペルが ちがうよ！もういちど たしかめてね 🔍'); return; }
 
     const reds = tutSets[i].reds || [];
     const def = CMD_TO_RED[cmd];
     if (!def) continue;
     // 赤ブロックが1枚もない
-    if (reds.length === 0) { SFX.wrong(); showFeedback(false, 'あかいブロックが ないよ！はめてみてね 🔍'); return; }
-    // 最初の赤だけ判定（複数スタックの先頭が正解かチェック）
+    if (reds.length === 0) { SFX.wrong(); showFeedback(false, (i+1) + 'ばんめに あかいブロックが ないよ！はめてみてね 🔍'); return; }
     const rk = reds[0].redKey;
     const rd = reds[0].redDir || getDefaultDir(rk,'');
-    if (rk !== def.type) { SFX.wrong(); showFeedback(false, 'あかいブロックが ちがうよ！もういちど たしかめてね 🔍'); return; }
+    const rc = reds[0].redCount || 1;
+    if (rk !== def.type) { SFX.wrong(); showFeedback(false, (i+1) + 'ばんめの あかいブロックが ちがうよ！もういちど たしかめてね 🔍'); return; }
+    // むき判定
     if (def.type === 'turn') {
       const expectedDir = (cmd==='right') ? '右' : '左';
       if ((rd||'左') !== expectedDir) { SFX.wrong(); showFeedback(false, 'プルダウンの むきが ちがうよ！もういちど たしかめてね 🔍'); return; }
     }
+    // checkDir（個別指定）
+    if (q.checkDirs && q.checkDirs[i] !== null && q.checkDirs[i] !== undefined) {
+      if (rd !== q.checkDirs[i]) { SFX.wrong(); showFeedback(false, (i+1) + 'ばんめの むきが ちがうよ！「' + q.checkDirs[i] + '」に してね 🔍'); return; }
+    } else if (q.checkDir !== undefined && q.checkDir !== null && expected.length === 1) {
+      if (rd !== q.checkDir) { SFX.wrong(); showFeedback(false, 'むきが ちがうよ！「' + q.checkDir + '」に してね 🔍'); return; }
+    }
+    // checkCount（個別指定）
+    if (q.checkCounts && q.checkCounts[i] !== null && q.checkCounts[i] !== undefined) {
+      if (rc !== q.checkCounts[i]) { SFX.wrong(); showFeedback(false, (i+1) + 'ばんめの かずが ちがうよ！「' + q.checkCounts[i] + '」に してね 🔍'); return; }
+    } else if (q.checkCount !== undefined && q.checkCount !== null && expected.length === 1) {
+      if (rc !== q.checkCount) { SFX.wrong(); showFeedback(false, 'かずが ちがうよ！「' + q.checkCount + '」に してね 🔍'); return; }
+    }
   }
+  tutChecking = true;
   SFX.correct(); showFeedback(true, 'せいかい！🎉');
   setTimeout(() => {
+    tutChecking = false;
     hideFeedback();
     const qs = TUT_QUESTIONS[tutLevel];
     if (tutQIndex+1 < qs.length) { tutQIndex++; showTutQuestion(); }
@@ -2666,17 +2968,82 @@ function tutCheck() {
 function showFeedback(ok, msg) {
   const fb = document.getElementById('tut-feedback');
   fb.className = ok ? 'ok' : 'ng';
-  fb.textContent = msg;
+  fb.innerHTML = msg;
   fb.style.display = 'block';
+  setTimeout(() => fb.classList.add('show'), 10);
+  if (ok) {
+    const flash = document.getElementById('tut-flash');
+    if (flash) { flash.classList.add('on'); setTimeout(() => flash.classList.remove('on'), 180); }
+  }
   if (!ok) setTimeout(() => hideFeedback(), 2500);
 }
-function hideFeedback() { document.getElementById('tut-feedback').style.display = 'none'; }
+function hideFeedback() {
+  const fb = document.getElementById('tut-feedback');
+  fb.classList.remove('show');
+  fb.style.display = 'none';
+}
 
 function showTutComplete() {
   document.getElementById('tut-quiz-screen').classList.remove('active');
   document.getElementById('tut-complete-screen').classList.add('active');
-  document.getElementById('tut-complete-msg').innerHTML =
-    'Level ' + tutLevel + ' の もんだいを ぜんぶクリア！<br>コマンドを しっかり おぼえたね！🌟';
+  const msgs = {
+    1: 'Level 1 クリア！<br>きほんの コマンドを おぼえたね！🌟',
+    2: 'Level 2 クリア！<br>コマンドを くみあわせられるように なったね！✨',
+    3: 'Level 3 マスター！<br>むきと かずまで ばっちり！さいこう！🏆'
+  };
+  document.getElementById('tut-complete-msg').innerHTML = msgs[tutLevel] || 'Level ' + tutLevel + ' クリア！🌟';
+  // 次のレベルボタン
+  const nextBtn = document.getElementById('next-level-btn');
+  if (nextBtn) nextBtn.style.display = tutLevel < 3 ? '' : 'none';
+  // 紙吹雪
+  startConfetti();
+}
+
+function goNextLevel() {
+  stopConfetti();
+  startTutorialLevel(tutLevel + 1);
+}
+
+// ===== 紙吹雪 =====
+let confettiAnim = null;
+function startConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const W = canvas.parentElement.offsetWidth;
+  const H = canvas.parentElement.offsetHeight;
+  canvas.width = W; canvas.height = H;
+  const ctx2 = canvas.getContext('2d');
+  const colors = ['#f6e05e','#68d391','#63b3ed','#fc8181','#b794f4','#f6ad55'];
+  const pieces = Array.from({length:80}, () => ({
+    x: Math.random()*W, y: Math.random()*H - H,
+    w: 8 + Math.random()*8, h: 4 + Math.random()*4,
+    rot: Math.random()*360, rotV: (Math.random()-0.5)*6,
+    vy: 2 + Math.random()*3, vx: (Math.random()-0.5)*2,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    alpha: 1
+  }));
+  function draw() {
+    ctx2.clearRect(0,0,W,H);
+    pieces.forEach(p => {
+      p.y += p.vy; p.x += p.vx; p.rot += p.rotV;
+      if (p.y > H+20) { p.y = -20; p.x = Math.random()*W; }
+      ctx2.save();
+      ctx2.globalAlpha = p.alpha;
+      ctx2.translate(p.x, p.y);
+      ctx2.rotate(p.rot * Math.PI/180);
+      ctx2.fillStyle = p.color;
+      ctx2.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx2.restore();
+    });
+    confettiAnim = requestAnimationFrame(draw);
+  }
+  stopConfetti();
+  draw();
+}
+function stopConfetti() {
+  if (confettiAnim) { cancelAnimationFrame(confettiAnim); confettiAnim = null; }
+  const canvas = document.getElementById('confetti-canvas');
+  if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
 }
 
 // ===== 起動 =====
