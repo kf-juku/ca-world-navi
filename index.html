@@ -43,19 +43,39 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   display:inline-flex;align-items:center;justify-content:center;
   font-size:13px;flex-shrink:0;
 }
-#stage-sel{
+#stage-dropdown{
+  position:absolute;top:56px;right:10px;z-index:9999;
   background:#1a1c22;
   border:1px solid var(--panel-border);
-  color:var(--text);padding:5px 10px;border-radius:6px;
-  font-size:12px;font-family:var(--font);font-weight:500;
-  max-width:200px;cursor:pointer;outline:none;
-  transition:border-color .15s;
-  /* ドロップダウン展開時の背景（Chrome/Edge） */
-  color-scheme: dark;
+  border-radius:8px;
+  overflow:hidden;
+  display:none;
+  min-width:200px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  pointer-events:auto;
 }
-#stage-sel:hover,#stage-sel:focus{border-color:var(--panel-border-a);}
-#stage-sel option{background:#1a1c22;color:#e8e0d0;}
-#stage-sel option:checked,#stage-sel option:hover{background:#2a4a8a;color:#fff;}
+#stage-dropdown.open{display:block;}
+.stage-dd-item{
+  padding:9px 14px;font-size:12px;font-family:var(--font);
+  color:var(--text);cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  transition:background .12s;
+}
+.stage-dd-item:last-child{border-bottom:none;}
+.stage-dd-item:hover{background:rgba(90,154,53,0.18);}
+.stage-dd-item.active{background:rgba(40,100,200,0.25);color:#aad4ff;}
+#stage-sel-btn{
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:var(--text-dim);border-radius:7px;
+  padding:6px 11px;font-size:11px;cursor:pointer;
+  font-family:var(--font);font-weight:600;
+  pointer-events:auto;-webkit-tap-highlight-color:transparent;
+  transition:color .15s,border-color .15s,background .15s;
+}
+#stage-sel-btn:hover{color:var(--text);border-color:var(--panel-border-a);background:rgba(90,154,53,0.10);}
+#stage-sel-btn:active{background:rgba(90,154,53,0.18);}
 
 /* ===== HUDパネル ===== */
 #status{
@@ -657,6 +677,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 }
 /* セット全体をドラッグ可能に見せる */
 .scratch-set .scratch-blue{cursor:grab;}
+.scratch-blue.drag-over{outline:2px solid #63b3ed;background:rgba(40,100,200,0.35);}
+/* 挿入ライン */
+.insert-zone{
+  height:0;margin:0;
+  position:relative;cursor:default;
+  flex-shrink:0;
+  /* 上下に16pxずつヒット領域を広げる */
+  padding:10px 0;
+  margin:-10px 0;
+  z-index:10;
+}
+.insert-zone::after{
+  content:'';position:absolute;left:4px;right:4px;top:50%;
+  height:3px;background:transparent;border-radius:2px;
+  transition:background .12s, box-shadow .12s;
+  transform:translateY(-50%);
+  pointer-events:none;
+}
+.insert-zone.drag-over::after{
+  background:#f6e05e;
+  box-shadow:0 0 8px 3px rgba(246,224,94,0.75);
+}
 .scratch-set .scratch-blue:active{cursor:grabbing;}
 
 /* ===== パレット ===== */
@@ -860,10 +902,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   <!-- ヘッダー -->
   <div id="hdr">
     <h1><span class="icon">⛏</span> CAワールドナビ</h1>
-    <select id="stage-sel" onchange="loadStageById(this.value)">
-      <option value="">読み込み中...</option>
-    </select>
   </div>
+  <!-- ステージ選択ドロップダウン -->
+  <div id="stage-dropdown"></div>
   <!-- ステータス -->
   <div id="status">
     <div>向き: <span class="val" id="ov-dir">北</span></div>
@@ -873,6 +914,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   <div id="logbar"><span id="logspan"></span></div>
   <!-- カメラ操作・ヘルプ -->
   <div id="cam-controls">
+    <button id="stage-sel-btn" onclick="toggleStageSel()">📋 ステージ選択</button>
     <button class="cam-btn" ontouchstart="resetCam()" onclick="resetCam()">📷 視点リセット</button>
     <button class="cam-btn" ontouchstart="showHelp()" onclick="showHelp()">❓ 操作説明</button>
     <div style="display:flex;gap:4px;justify-content:flex-end;">
@@ -968,7 +1010,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   <!-- ヘッダー -->
   <div id="tut-hdr">
     <h1><span class="icon">⛏</span> CAワールドナビ ― コード練習</h1>
-    <button id="tut-back-btn" onclick="closeTutorial()">← ステージへ</button>
+    <button id="tut-back-btn" onclick="toggleStageSel()">📋 ステージを選ぶ</button>
   </div>
 
   <!-- レベル選択画面 -->
@@ -1726,16 +1768,11 @@ function doUndo(){
   buildTrail();updateHUD();updateLog();
 }
 function loadNextStage(){
-  const sel = document.getElementById('stage-sel');
-  const curId = sel.value;
-  const idx = stageList.findIndex(s => s.id === curId);
-  if(idx < 0 || idx >= stageList.length - 1){
-    // 次がない場合はボタンをグレーアウト（既にdisabledのはず）
-    return;
-  }
+  const idx = stageList.findIndex(s => s.id === currentStageId);
+  if(idx < 0 || idx >= stageList.length - 1) return;
   const next = stageList[idx + 1];
   document.getElementById('goalmsg').style.display='none';
-  sel.value = next.id;
+  currentStageId = next.id;
   loadStageById(next.id);
 }
 
@@ -1743,9 +1780,7 @@ function loadNextStage(){
 function updateNextBtn(){
   const btn = document.getElementById('next-stage-btn');
   if(!btn) return;
-  const sel = document.getElementById('stage-sel');
-  const curId = sel.value;
-  const idx = stageList.findIndex(s => s.id === curId);
+  const idx = stageList.findIndex(s => s.id === currentStageId);
   btn.disabled = (idx < 0 || idx >= stageList.length - 1);
   btn.style.display = btn.disabled ? 'none' : '';
 }
@@ -2014,6 +2049,7 @@ function animate(ts){
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyhowPdOUg0Rki2XrHnjUToROGDIuDu6yEITgWCFDO2ZPDZsr3VKZ03-1b2CKIcM-lS/exec';
 
 let stageList = [];
+let currentStageId = 'tutorial'; // 現在選択中のステージ
 
 // ステージ一覧をGASから取得してドロップダウンを更新
 function showLoading(msg) {
@@ -2028,12 +2064,8 @@ function hideLoading() {
 }
 
 async function loadStageList() {
-  const sel = document.getElementById('stage-sel');
-  // チュートリアルを先頭に固定
-  sel.innerHTML = '<option value="tutorial">📝 コード練習</option>';
-
   if (!GAS_URL) {
-    sel.innerHTML += '<option value="">（GAS未設定）</option>';
+    currentStageId = 'tutorial';
     openTutorial();
     return;
   }
@@ -2043,38 +2075,38 @@ async function loadStageList() {
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
     stageList = json.stages;
-    stageList.forEach(s => {
-      sel.innerHTML += `<option value="${s.id}">${s.id} ${s.name ? '- ' + s.name : ''}</option>`;
-    });
     // URLパラメータ ?stage=xxx があればそのステージを選択
     const params = new URLSearchParams(location.search);
     const stageId = params.get('stage');
     if (stageId === 'tutorial') {
       hideLoading();
-      sel.value = 'tutorial';
+      currentStageId = 'tutorial';
       openTutorial();
     } else if (stageId && stageList.find(s => s.id === stageId)) {
-      sel.value = stageId;
+      currentStageId = stageId;
       hideLoading();
       await loadStageById(stageId);
     } else {
-      // デフォルトはチュートリアル
+      // デフォルトはコード練習
       hideLoading();
-      sel.value = 'tutorial';
+      currentStageId = 'tutorial';
       openTutorial();
     }
   } catch(e) {
     hideLoading();
     console.error('ステージ一覧の取得に失敗:', e);
-    sel.value = 'tutorial';
+    currentStageId = 'tutorial';
     openTutorial();
   }
 }
 
 // 特定のステージをGASから読み込んで表示
 async function loadStageById(id) {
-  if (id === 'tutorial') { openTutorial(); return; }
+  if (id === 'tutorial') { currentStageId = 'tutorial'; openTutorial(); return; }
   if (!id || !GAS_URL) return;
+  currentStageId = id;
+  // コード練習オーバーレイを閉じる
+  document.getElementById('tutorial-overlay').classList.remove('active');
   showLoading('ステージを読み込み中...');
   try {
     const res = await fetch(GAS_URL + '?action=get&id=' + encodeURIComponent(id));
@@ -2171,15 +2203,61 @@ let tutHistory = [];
 let dragInfo = null;
 
 // ===== 画面制御 =====
+// ===== ステージ選択ドロップダウン =====
+
+function buildStageDropdown() {
+  const dd = document.getElementById('stage-dropdown');
+  if (!dd) return;
+  dd.innerHTML = '';
+  // コード練習（ステージ0）
+  const tutItem = document.createElement('div');
+  tutItem.className = 'stage-dd-item' + (currentStageId === 'tutorial' ? ' active' : '');
+  tutItem.textContent = '📝 コード練習';
+  tutItem.onclick = () => { closeDd(); currentStageId = 'tutorial'; loadStageById('tutorial'); };
+  dd.appendChild(tutItem);
+  // 通常ステージ
+  stageList.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'stage-dd-item' + (currentStageId === s.id ? ' active' : '');
+    item.textContent = s.id + (s.name ? ' - ' + s.name : '');
+    item.onclick = () => { closeDd(); currentStageId = s.id; loadStageById(s.id); };
+    dd.appendChild(item);
+  });
+}
+
+function toggleStageSel() {
+  const dd = document.getElementById('stage-dropdown');
+  if (!dd) return;
+  if (dd.classList.contains('open')) {
+    dd.classList.remove('open');
+  } else {
+    buildStageDropdown();
+    dd.classList.add('open');
+  }
+}
+
+function closeDd() {
+  const dd = document.getElementById('stage-dropdown');
+  if (dd) dd.classList.remove('open');
+}
+
+// ページクリックでも閉じる
+document.addEventListener('click', e => {
+  const dd = document.getElementById('stage-dropdown');
+  const btn = document.getElementById('stage-sel-btn');
+  const backBtn = document.getElementById('tut-back-btn');
+  if (!dd) return;
+  if (!dd.contains(e.target) && (!btn || !btn.contains(e.target)) && (!backBtn || !backBtn.contains(e.target))) {
+    dd.classList.remove('open');
+  }
+});
+
 function openTutorial() {
   document.getElementById('tutorial-overlay').classList.add('active');
   showTutLevelScreen();
 }
 function closeTutorial() {
   document.getElementById('tutorial-overlay').classList.remove('active');
-  const sel = document.getElementById('stage-sel');
-  const firstNormal = Array.from(sel.options).find(o => o.value && o.value !== 'tutorial');
-  if (firstNormal) { sel.value = firstNormal.value; loadStageById(firstNormal.value); }
 }
 function showTutLevelScreen() {
   document.getElementById('tut-level-screen').classList.add('active');
@@ -2307,12 +2385,76 @@ function renderBuildArea() {
       dragInfo = null;
       hideTrash();
     });
+    // 青ブロック本体にも赤を受け取れるように（赤0件時や大雑把なドロップ対応）
+    blueEl.addEventListener('dragover', e => {
+      if(dragInfo && (dragInfo.type==='red' || (dragInfo.type==='red-slice' && dragInfo.setIdx !== i))) {
+        e.preventDefault();
+        blueEl.classList.add('drag-over');
+      }
+    });
+    blueEl.addEventListener('dragleave', () => blueEl.classList.remove('drag-over'));
+    blueEl.addEventListener('drop', e => {
+      e.preventDefault(); blueEl.classList.remove('drag-over');
+      if(!dragInfo) return;
+      if(dragInfo.type==='red') {
+        const key = dragInfo.redKey; dragInfo = null;
+        saveHistory();
+        tutSets[i].reds.push({redKey:key, redDir:getDefaultDir(key,'')});
+        SFX.redPlace(); renderBuildArea();
+      } else if(dragInfo.type==='red-slice' && dragInfo.setIdx !== i) {
+        const {setIdx, fromRi} = dragInfo; dragInfo = null; hideTrash();
+        saveHistory();
+        const moved = tutSets[setIdx].reds.splice(fromRi);
+        tutSets[i].reds.push(...moved);
+        SFX.redPlace(); renderBuildArea();
+      }
+    });
     setEl.appendChild(blueEl);
 
     // 赤ブロック群（複数スタック対応）
     const reds = set.reds || (set.redKey ? [{redKey:set.redKey,redDir:set.redDir}] : []);
     // 状態を reds 配列に正規化
     if (!set.reds) { set.reds = reds; delete set.redKey; delete set.redDir; }
+
+    // 挿入ゾーン生成ヘルパー（赤スライス・赤パレット両対応）
+    // insertAt: この setIdx の reds[insertAt] の位置に挿入
+    function makeInsertZone(targetSetIdx, insertAt) {
+      const zone = document.createElement('div');
+      zone.className = 'insert-zone';
+      zone.addEventListener('dragover', e => {
+        const ok = dragInfo && (
+          (dragInfo.type==='red-slice' && !(dragInfo.setIdx===targetSetIdx && dragInfo.fromRi===insertAt)) ||
+          dragInfo.type==='red'
+        );
+        if(ok){ e.preventDefault(); zone.classList.add('drag-over'); }
+      });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault(); zone.classList.remove('drag-over');
+        if(!dragInfo) return;
+        if(dragInfo.type==='red-slice') {
+          const {setIdx, fromRi} = dragInfo;
+          dragInfo = null; hideTrash();
+          saveHistory();
+          const moved = tutSets[setIdx].reds.splice(fromRi);
+          // 移動先のインデックスを再計算（同セット内で前から後ろへ移動した場合ずれない）
+          let ins = insertAt;
+          if(setIdx === targetSetIdx && fromRi < insertAt) ins -= moved.length;
+          tutSets[targetSetIdx].reds.splice(Math.max(0,ins), 0, ...moved);
+          SFX.redPlace(); renderBuildArea();
+        } else if(dragInfo.type==='red') {
+          const key = dragInfo.redKey;
+          dragInfo = null;
+          saveHistory();
+          tutSets[targetSetIdx].reds.splice(insertAt, 0, {redKey:key, redDir:getDefaultDir(key,'')});
+          SFX.redPlace(); renderBuildArea();
+        }
+      });
+      return zone;
+    }
+
+    // 先頭挿入ゾーン（青ブロックの直下）
+    setEl.appendChild(makeInsertZone(i, 0));
 
     reds.forEach((r, ri) => {
       const redEl = document.createElement('div');
@@ -2323,13 +2465,12 @@ function renderBuildArea() {
       redEl.querySelectorAll('select').forEach(sel => {
         sel.addEventListener('change', e => { set.reds[ri].redDir = e.target.value; });
       });
-      // 赤ブロックをドラッグ→ゴミ箱で ri 以降を削除
+      // 赤ブロックをドラッグ→ゴミ箱 or 挿入ゾーンで移動
       redEl.draggable = true;
       redEl.style.cursor = 'grab';
       redEl.dataset.ri = ri;
       redEl.addEventListener('dragstart', e => {
         dragInfo = {type:'red-slice', setIdx:i, fromRi:ri};
-        // ri以降の赤ブロック全部を dragging-tail にする
         const tailEls = [];
         setEl.querySelectorAll('.scratch-red').forEach(el => {
           if(Number(el.dataset.ri) >= ri) {
@@ -2339,7 +2480,6 @@ function renderBuildArea() {
         });
         showTrash();
         e.dataTransfer.effectAllowed = 'move';
-        // ゴースト：ri以降の赤全部
         const ghost = makeDragGhost(tailEls, '#cc3a14');
         e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
       });
@@ -2349,24 +2489,12 @@ function renderBuildArea() {
         hideTrash();
       });
       setEl.appendChild(redEl);
+      // 各赤ブロックの後ろに挿入ゾーン
+      setEl.appendChild(makeInsertZone(i, ri + 1));
     });
 
-    // 赤追加スロット（末尾に常時表示）
-    const addSlot = document.createElement('div');
-    addSlot.className = 'red-add-slot';
-    addSlot.innerHTML = '<span>＋ あかいブロックをここに おとして</span>';
-    addSlot.addEventListener('dragover', e => { if(dragInfo&&dragInfo.type==='red'){e.preventDefault();addSlot.classList.add('drag-over');} });
-    addSlot.addEventListener('dragleave', () => addSlot.classList.remove('drag-over'));
-    addSlot.addEventListener('drop', e => {
-      e.preventDefault(); addSlot.classList.remove('drag-over');
-      if(dragInfo&&dragInfo.type==='red'){
-        saveHistory();
-        set.reds.push({redKey:dragInfo.redKey, redDir:getDefaultDir(dragInfo.redKey,'')});
-        SFX.redPlace();
-        dragInfo=null; renderBuildArea();
-      }
-    });
-    setEl.appendChild(addSlot);
+    // 赤が0件のときは先頭ゾーンだけで十分（追加スロットは廃止）
+    // パレットの赤ブロックの受け取りは挿入ゾーンが担う
 
     // ×ボタンなし：セット全体D&Dでゴミ箱削除
 
