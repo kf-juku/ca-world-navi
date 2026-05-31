@@ -967,14 +967,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 <div id="tutorial-overlay">
   <!-- ヘッダー -->
   <div id="tut-hdr">
-    <h1><span class="icon">⛏</span> CAワールドナビ ― チュートリアル</h1>
+    <h1><span class="icon">⛏</span> CAワールドナビ ― コード練習</h1>
     <button id="tut-back-btn" onclick="closeTutorial()">← ステージへ</button>
   </div>
 
   <!-- レベル選択画面 -->
   <div id="tut-level-screen">
-    <h2><ruby>レベル<rt>れべる</rt></ruby>をえらぼう</h2>
-    <p><ruby>英語<rt>えいご</rt></ruby>の<ruby>命令<rt>めいれい</rt></ruby>ブロックを くみたてる <ruby>練習<rt>れんしゅう</rt></ruby>をしよう！</p>
+    <h2>コード練習の<ruby>レベル<rt>れべる</rt></ruby>をえらぼう</h2>
+    <p><ruby>英語<rt>えいご</rt></ruby>の<ruby>命令<rt>めいれい</rt></ruby>ブロックを くみたてて、<ruby>基本<rt>きほん</rt></ruby>コードを<ruby>練習<rt>れんしゅう</rt></ruby>しよう！</p>
     <div class="level-cards">
       <div class="level-card" onclick="startTutorialLevel(1)">
         <div class="lv-num">1</div>
@@ -1051,7 +1051,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   <!-- 完了画面 -->
   <div id="tut-complete-screen">
     <div class="complete-icon">🎉</div>
-    <h2>チュートリアル かんりょう！</h2>
+    <h2>コード練習 かんりょう！</h2>
     <p id="tut-complete-msg">すべての問題をクリアしました！<br>コマンドをしっかり覚えたね！</p>
     <button class="tut-btn back-to-level" onclick="showTutLevelScreen()">レベルえらびにもどる</button>
   </div>
@@ -2030,7 +2030,7 @@ function hideLoading() {
 async function loadStageList() {
   const sel = document.getElementById('stage-sel');
   // チュートリアルを先頭に固定
-  sel.innerHTML = '<option value="tutorial">🎮 チュートリアル</option>';
+  sel.innerHTML = '<option value="tutorial">📝 コード練習</option>';
 
   if (!GAS_URL) {
     sel.innerHTML += '<option value="">（GAS未設定）</option>';
