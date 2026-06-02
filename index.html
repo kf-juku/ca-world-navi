@@ -23,6 +23,15 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 #c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;}
 #ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+#loop-labels{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;}
+.loop-label{
+  position:absolute;transform:translate(-50%,-100%);
+  font-size:14px;font-weight:900;line-height:1;
+  padding:2px 5px;border-radius:4px;
+  border:1.5px solid;opacity:0.92;
+  font-family:monospace;
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
+}
 
 /* ===== ヘッダー ===== */
 #hdr{
@@ -1053,6 +1062,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="loop-labels"></div>
 <div id="ui">
   <!-- ヘッダー -->
   <div id="hdr">
@@ -1700,16 +1710,45 @@ function updateCam(){
 }
 
 // タッチ/マウスカメラ操作
-let drag={on:false,x:0,y:0};
+let drag={on:false,x:0,y:0,pan:false};
 const wrap=document.getElementById('c');
-wrap.addEventListener('mousedown',e=>{if(editMode)return;drag.on=true;drag.x=e.clientX;drag.y=e.clientY;});
+wrap.addEventListener('mousedown',e=>{
+  if(editMode)return;
+  if(e.button===1){
+    // ミドルクリック＝パンモード
+    e.preventDefault();
+    drag.pan=true;drag.on=false;
+    drag.x=e.clientX;drag.y=e.clientY;
+  } else if(e.button===0){
+    drag.on=true;drag.pan=false;
+    drag.x=e.clientX;drag.y=e.clientY;
+  }
+});
+wrap.addEventListener('contextmenu',e=>{if(drag.pan)e.preventDefault();});
 window.addEventListener('mousemove',e=>{
+  if(drag.pan){
+    // パン：カメラのright/up方向にtargetをずらす
+    const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    drag.x=e.clientX;drag.y=e.clientY;
+    const spd=orbit.dist*0.0025;
+    // カメラの水平right方向（theta+90度）
+    const rx=Math.cos(orbit.theta),rz=-Math.sin(orbit.theta);
+    // カメラの上方向（地面水平を維持）
+    orbit.target.x -= dx*spd*rx;
+    orbit.target.z -= dx*spd*rz;
+    orbit.target.y += dy*spd; // 上下パン
+    updateCam();
+    return;
+  }
   if(!drag.on)return;
   orbit.theta-=(e.clientX-drag.x)*.007;
   orbit.phi=Math.max(.08,Math.min(1.45,orbit.phi-(e.clientY-drag.y)*.007));
   drag.x=e.clientX;drag.y=e.clientY;updateCam();
 });
-window.addEventListener('mouseup',()=>drag.on=false);
+window.addEventListener('mouseup',e=>{
+  if(e.button===1) drag.pan=false;
+  else drag.on=false;
+});
 let t1={};
 wrap.addEventListener('touchstart',e=>{
   if(editMode)return;
@@ -1926,6 +1965,54 @@ function buildTrail(){
 }
 ghostMesh=new THREE.Mesh(GEO.block,MAT.ghost);ghostMesh.visible=false;scene.add(ghostMesh);
 
+// ===== ループラベルoverlay =====
+const LOOP_LABEL_COLORS = [
+  {color:'#d8b4fe',bg:'rgba(100,30,160,0.75)',border:'rgba(168,85,247,0.90)'},
+  {color:'#fde047',bg:'rgba(140,100,0,0.75)',border:'rgba(234,179,8,0.90)'},
+  {color:'#86efac',bg:'rgba(10,80,40,0.75)',border:'rgba(22,163,74,0.90)'},
+];
+
+function worldToScreen(wx,wy,wz){
+  // Three.jsの3D座標→スクリーン座標
+  const v=new THREE.Vector3(wx,wy,wz);
+  v.project(camera);
+  const w=renderer.domElement.clientWidth||window.innerWidth;
+  const h=renderer.domElement.clientHeight||window.innerHeight;
+  return {
+    x:(v.x*.5+.5)*w,
+    y:(-.5*v.y+.5)*h,
+    behind:v.z>1
+  };
+}
+
+function updateLoopLabels(){
+  const container=document.getElementById('loop-labels');
+  if(!container)return;
+  // loopSnapshotsが空またはプレイモードでない場合は非表示
+  if(!loopSnapshots.length||editMode){
+    container.innerHTML='';return;
+  }
+  // 各ループの開始点（histLen番目のhistory点）のワールド座標を取得
+  let html='';
+  for(let si=0;si<loopSnapshots.length;si++){
+    const snap=loopSnapshots[si];
+    const histIdx=snap.histLen; // このインデックス以降がループ展開部分
+    // histIdx番目のポイント = historyがあれば使う、なければ現在のplayer位置
+    let wx,wy,wz;
+    if(histIdx < history.length){
+      wx=history[histIdx].x;wy=history[histIdx].y+1.2;wz=history[histIdx].z;
+    } else {
+      wx=player.x;wy=player.y+1.2;wz=player.z;
+    }
+    const sc=worldToScreen(wx,wy,wz);
+    if(sc.behind)continue;
+    const lbl=['①','②','③'][si]||(si+1)+'';
+    const c=LOOP_LABEL_COLORS[si]||LOOP_LABEL_COLORS[2];
+    html+=`<div class="loop-label" style="left:${sc.x}px;top:${sc.y}px;color:${c.color};background:${c.bg};border-color:${c.border};">${lbl}</div>`;
+  }
+  container.innerHTML=html;
+}
+
 function refreshAll(){
   buildGround();buildBlocks();buildTiles();buildMarkers();buildTrail();
   logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
@@ -1966,6 +2053,7 @@ function updateLog(){
   const loopBg   = ['rgba(140,60,200,0.30)','rgba(200,160,20,0.30)','rgba(30,140,60,0.30)'];
   const loopBdr  = ['rgba(168,85,247,0.70)','rgba(234,179,8,0.70)','rgba(22,163,74,0.70)'];
   const loopClr  = ['#d8b4fe','#fde047','#86efac'];
+  const loopLabel= ['①','②','③'];
 
   const snapLens = loopSnapshots.map(s => s.logLen);
   let html = '';
@@ -1978,12 +2066,14 @@ function updateLog(){
     const bg  = loopBg[si]  || 'rgba(100,100,100,0.20)';
     const bdr = loopBdr[si] || 'rgba(180,180,180,0.50)';
     const clr = loopClr[si] || '#ccc';
+    const lbl = loopLabel[si] || (si+1)+'';
     // 繰り返し回数
     const cnt = snapLens[si] > 0 ? Math.round(
       (si+1 < snapLens.length ? snapLens[si+1] : actionLog.length) / snapLens[si]
     ) : 1;
-    // ループブロックを枠で囲む
+    // ループブロックを枠で囲む（番号バッジ付き）
     html += `<span style="display:inline-flex;align-items:center;gap:2px;background:${bg};border:1px solid ${bdr};border-radius:5px;padding:1px 4px;margin:1px 2px;">`;
+    html += `<span style="color:${clr};font-weight:900;font-size:12px;margin-right:1px;">${lbl}</span>`;
     html += compressed.map(({a,n})=>
       `<span class="ls" style="color:${clr};">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
     ).join('');
@@ -2413,6 +2503,7 @@ function animate(ts){
   }
   if(goalMesh&&goalMesh._gem)goalMesh._gem.rotation.y+=0.04;
   renderer.render(scene,camera);
+  updateLoopLabels();
 }
 
 // ===== GAS・ステージ管理 =====
