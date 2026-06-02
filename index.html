@@ -1627,6 +1627,22 @@ const MAT={
   arrowMove:new THREE.MeshLambertMaterial({color:0xffdd00,transparent:true,opacity:0.85}),
   arrowLine:new THREE.LineBasicMaterial({color:0xffdd00,transparent:true,opacity:0.6,linewidth:2}),
   arrowDot:new THREE.MeshLambertMaterial({color:0xff8800,transparent:true,opacity:0.75}),
+  // ループ深さ別矢印マテリアル（深さ1=紫, 2=黄金, 3=深緑）
+  loopArrow:[
+    new THREE.MeshLambertMaterial({color:0xaa44ee,transparent:true,opacity:0.90}), // 深さ1: 紫
+    new THREE.MeshLambertMaterial({color:0xe8c000,transparent:true,opacity:0.90}), // 深さ2: 黄金
+    new THREE.MeshLambertMaterial({color:0x228844,transparent:true,opacity:0.90}), // 深さ3: 深緑
+  ],
+  loopLine:[
+    new THREE.LineBasicMaterial({color:0xaa44ee,transparent:true,opacity:0.70,linewidth:2}), // 深さ1
+    new THREE.LineBasicMaterial({color:0xe8c000,transparent:true,opacity:0.70,linewidth:2}), // 深さ2
+    new THREE.LineBasicMaterial({color:0x228844,transparent:true,opacity:0.70,linewidth:2}), // 深さ3
+  ],
+  loopDot:[
+    new THREE.MeshLambertMaterial({color:0xcc66ff,transparent:true,opacity:0.80}), // 深さ1
+    new THREE.MeshLambertMaterial({color:0xffdd44,transparent:true,opacity:0.80}), // 深さ2
+    new THREE.MeshLambertMaterial({color:0x44aa66,transparent:true,opacity:0.80}), // 深さ3
+  ],
   ghost:new THREE.MeshLambertMaterial({color:0x4488ff,transparent:true,opacity:0.33}),
   start:new THREE.MeshLambertMaterial({color:0x00cc66}),
   goal:new THREE.MeshLambertMaterial({color:0xff2244}),
@@ -1828,45 +1844,81 @@ function buildTrail(){
   trailMeshes.forEach(m=>scene.remove(m));trailMeshes=[];
   if(history.length===0)return;
 
-  // 軌跡ポイント列（history[0]＝スタート直後の前ポジション + 現在位置）
+  // 軌跡ポイント列
   const pts=[...history,{x:player.x,y:player.y,z:player.z,dir:player.dir}];
 
-  // 移動ステップに矢印を置く
+  // loopSnapshotsからhistory上のインデックス境界を作成
+  // history.length = actionLog.length なので histLen を使用
+  // 各スナップのhist境界: snap.histLen = スナップ適用時点のhistory長
+  // depth=スナップ作成時の多重深さ（0始まり）
+  function getLoopDepthAt(histIdx){
+    // histIdx番目のhistory点がどのループ深さに属するか返す
+    // loopSnapshotsが空なら0（通常色）
+    if(!loopSnapshots.length) return -1;
+    for(let si=loopSnapshots.length-1;si>=0;si--){
+      const snap=loopSnapshots[si];
+      // snap.histLen = ループ本体の長さ（1サイクル分）
+      // ループ展開後のhistory範囲: snap.histLen まではループ本体、それ以降が繰り返し部分
+      // 深さ = snap.depth (0始まり)
+      if(histIdx >= snap.histLen) return snap.depth;
+    }
+    return -1;
+  }
+
+  // actionLogとhistoryのインデックスを対応させる
+  // history[i]はactionLog[i]実行後の状態
+  // loopSnapshots.histLen: 最初のスナップが登録された時点のhist長
+  // → history上でsnap.histLen以降がループ展開された繰り返し区間
+  const snapHistLens = loopSnapshots.map(s => s.histLen);
+
+  function getDepthForStep(stepIdx){
+    // stepIdx: history配列のインデックス（0始まり）
+    // 該当するループ深さを返す（-1=ループ外）
+    let depth = -1;
+    for(let si=0;si<loopSnapshots.length;si++){
+      const snap = loopSnapshots[si];
+      if(stepIdx >= snap.histLen){
+        depth = snap.depth; // 0始まりの深さ
+      }
+    }
+    return depth;
+  }
+
   for(let i=0;i<pts.length-1;i++){
     const a=pts[i],b=pts[i+1];
     const moved=(a.x!==b.x||a.y!==b.y||a.z!==b.z);
+
+    // この区間の深さを判定
+    const depth = getDepthForStep(i);
+    const matArrow = depth>=0 ? (MAT.loopArrow[depth]||MAT.loopArrow[2]) : MAT.arrowMove;
+    const matLine  = depth>=0 ? (MAT.loopLine[depth] ||MAT.loopLine[2])  : MAT.arrowLine;
+    const matDot   = depth>=0 ? (MAT.loopDot[depth]  ||MAT.loopDot[2])   : MAT.arrowDot;
+
     if(moved){
-      // 中間点に矢印（軸 + 先端）
       const dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z;
-      const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
       const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,mz=(a.z+b.z)/2;
 
-      // 軸
-      const shaft=new THREE.Mesh(GEO.arrowShaft,MAT.arrowMove);
+      const shaft=new THREE.Mesh(GEO.arrowShaft,matArrow);
       shaft.position.set(mx,my,mz);
-      // 方向に向ける
       const dir3=new THREE.Vector3(dx,dy,dz).normalize();
       const up=new THREE.Vector3(0,1,0);
       const q=new THREE.Quaternion().setFromUnitVectors(up,dir3);
       shaft.setRotationFromQuaternion(q);
       scene.add(shaft);trailMeshes.push(shaft);
 
-      // 先端
-      const head=new THREE.Mesh(GEO.arrowHead,MAT.arrowMove);
+      const head=new THREE.Mesh(GEO.arrowHead,matArrow);
       head.position.set(b.x*.7+a.x*.3,b.y*.7+a.y*.3,b.z*.7+a.z*.3);
       head.setRotationFromQuaternion(q);
       scene.add(head);trailMeshes.push(head);
 
-      // ステップ間の線
       const geom=new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(a.x,a.y,a.z),
         new THREE.Vector3(b.x,b.y,b.z)
       ]);
-      const line=new THREE.Line(geom,MAT.arrowLine);
+      const line=new THREE.Line(geom,matLine);
       scene.add(line);trailMeshes.push(line);
     } else {
-      // 回転・上下はドット
-      const dot=new THREE.Mesh(GEO.dot,MAT.arrowDot);
+      const dot=new THREE.Mesh(GEO.dot,matDot);
       dot.position.set(a.x,a.y+.15,a.z);
       scene.add(dot);trailMeshes.push(dot);
     }
