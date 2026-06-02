@@ -203,12 +203,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 }
 .midbtn.rst:active{background:rgba(220,60,40,0.25);border-color:rgba(220,80,60,0.50);}
 .midbtn.play-btn{
-  background:rgba(90,154,53,0.18);
-  border-color:rgba(90,154,53,0.45);
-  color:#a0e060;min-width:110px;
+  background:rgba(40,100,200,0.85);
+  border-color:rgba(100,160,255,0.80);
+  color:#d8eeff;min-width:110px;
 }
-.midbtn.play-btn:hover{background:rgba(90,154,53,0.28);border-color:var(--accent);}
-.midbtn.play-btn:active{background:rgba(90,154,53,0.38);}
+.midbtn.play-btn:hover{background:rgba(60,120,220,0.95);border-color:rgba(140,190,255,0.90);}
+.midbtn.play-btn:active{background:rgba(30,80,180,0.95);}
 
 /* ===== アクションボタン ===== */
 .abxy{
@@ -940,6 +940,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   color:#aeffae;
 }
 .midbtn.loop:hover{background:rgba(55,150,55,0.90);}
+.midbtn.rst{
+  background:rgba(120,30,30,0.85);
+  border:1px solid rgba(200,80,80,0.35);
+  color:#ffaeae;
+}
+.midbtn.rst:hover{background:rgba(150,40,40,0.90);}
 #loop-modal{
   display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.65);z-index:9999;
@@ -1101,10 +1107,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
     <div class="replay-title">▶ ステップ再生</div>
     <div class="replay-step" id="replay-step-label">-</div>
     <div class="replay-btns">
-      <button class="rbtn" ontouchstart="replayPrev()" onclick="replayPrev()">⏮</button>
+      <button class="rbtn" ontouchstart="replayPrev()" onclick="replayPrev()" title="1手戻る">◀</button>
       <button class="rbtn" ontouchstart="replayToggle()" onclick="replayToggle()" id="replay-play-btn">▶</button>
-      <button class="rbtn" ontouchstart="replayNext()" onclick="replayNext()">⏭</button>
-      <button class="rbtn stop" ontouchstart="replayStop()" onclick="replayStop()">✕</button>
+      <button class="rbtn" ontouchstart="replayNext()" onclick="replayNext()" title="1手進む">▶|</button>
+      <button class="rbtn stop" ontouchstart="replayStop()" onclick="replayStop()" title="終了して戻る">閉じる</button>
     </div>
     <div id="replay-progress"></div>
   </div>
@@ -1138,7 +1144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
       <div class="mid-row">
         <button class="midbtn undo" ontouchstart="doUndo()" onclick="doUndo()">↩ Undo</button>
         <button class="midbtn loop" ontouchstart="openLoopModal()" onclick="openLoopModal()">🔁 くりかえし</button>
-        <button class="midbtn rst"  ontouchstart="resetGame()" onclick="resetGame()">↺</button>
+        <button class="midbtn rst"  ontouchstart="resetGame()" onclick="resetGame()">↺ リセット</button>
       </div>
       <div class="mid-row">
         <button class="midbtn play-btn" ontouchstart="startReplay()" onclick="startReplay()">▶ Replay</button>
@@ -1898,8 +1904,38 @@ function compressLog(log){
   return out;
 }
 function updateLog(){
-  const compressed=compressLog(actionLog);
-  document.getElementById('logspan').innerHTML=compressed.map(({a,n})=>
+  // loopSnapshotsの区切り位置を元にログを分割表示
+  let html = '';
+  const snapLens = loopSnapshots.map(s => s.logLen);
+  const loopColors = ['#a855f7','#eab308','#16a34a'];
+  let segStart = 0;
+  for(let si = 0; si < snapLens.length; si++){
+    const segEnd = snapLens[si];
+    const segLog = actionLog.slice(segStart, segEnd);
+    const compressed = compressLog(segLog);
+    html += compressed.map(({a,n})=>
+      `<span class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
+    ).join('');
+    // ループマーカー
+    const totalLen = actionLog.length;
+    const repeatCount = si+1 < snapLens.length ? snapLens[si+1]/snapLens[si]
+      : (snapLens[si] > 0 ? Math.round(totalLen / snapLens[si]) : 1);
+    // 次のスナップがあればその比、なければactionLog全体との比
+    const cnt = snapLens[si] > 0 ? Math.round(
+      (si+1 < snapLens.length ? snapLens[si+1] : actionLog.length) / snapLens[si]
+    ) : 1;
+    html += `<span class="ls loop-marker" style="color:${loopColors[si]||'#aaa'};font-weight:700;">🔁×${cnt}</span>`;
+    segStart = segEnd;
+  }
+  // 残りのログ
+  if(segStart < actionLog.length){
+    const restLog = actionLog.slice(segStart);
+    const compressed = compressLog(restLog);
+    html += compressed.map(({a,n})=>
+      `<span class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
+    ).join('');
+  }
+  document.getElementById('logspan').innerHTML = html || compressLog(actionLog).map(({a,n})=>
     `<span class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
   ).join('');
   const b=document.getElementById('logbar');b.scrollTop=b.scrollHeight;
@@ -2161,6 +2197,8 @@ function startReplay(){
   document.getElementById('ctrl').style.pointerEvents='none';
   replayPlaying=false;
   updateReplayUI();
+  // 自動再生開始
+  replayToggle();
 }
 
 function updateReplayUI(){
@@ -2235,11 +2273,9 @@ function replayStop(){
   document.getElementById('replay-ctrl').style.display='none';
   document.getElementById('ctrl').style.opacity='1';
   document.getElementById('ctrl').style.pointerEvents='auto';
-  // 再生前の状態を復元
+  // 再生前の状態を復元（ログは消さない）
   if(replaySavedPlayer){
     player={...replaySavedPlayer};
-    actionLog=[];history=[];
-    // ログは消す（再生前のログを再生した=確認済みとして素直にリセット）
     logPos.set(player.x,player.y,player.z);
     logRot=-(player.dir*Math.PI/2);
     drawPos.copy(logPos);drawRot=logRot;
