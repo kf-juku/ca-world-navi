@@ -88,7 +88,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
 /* ===== HUDパネル ===== */
 #status{
-  position:absolute;top:56px;left:10px;
+  position:absolute;top:56px;left:162px;
   background:var(--panel-bg);
   border:1px solid var(--panel-border);
   border-left:2px solid var(--accent);
@@ -102,22 +102,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
 /* ===== キーログ ===== */
 #logbar{
-  position:absolute;top:128px;left:10px;
+  position:absolute;top:56px;left:10px;bottom:220px;
   background:var(--panel-bg);
   border:1px solid var(--panel-border);
   border-left:2px solid rgba(90,154,53,0.4);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   border-radius:0 8px 8px 0;
-  padding:6px 8px;font-size:10px;color:#80b860;
-  max-width:110px;min-width:52px;
-  max-height:calc(100vh - 300px);overflow-y:auto;
-  word-break:break-all;font-family:monospace;font-weight:600;
-  display:flex;flex-direction:column;gap:2px;pointer-events:auto;
+  padding:4px 6px;font-size:14px;color:#80b860;
+  width:140px;min-width:52px;
+  overflow-y:auto;
+  word-break:break-all;font-family:monospace;font-weight:700;
+  display:none;flex-direction:column;gap:1px;pointer-events:auto;
   scrollbar-width:thin;scrollbar-color:rgba(90,154,53,0.3) transparent;
 }
 #logbar span.ls{
   background:rgba(90,154,53,0.12);
-  border-radius:3px;padding:1px 4px;display:block;
+  border-radius:3px;padding:0px 3px;display:inline-block;
 }
 
 /* ===== 右上ボタン ===== */
@@ -154,8 +154,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   gap:4px;pointer-events:auto;
 }
 .dp{
-  background:rgba(20,20,18,0.80);
-  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(20,20,18,0.88);
+  border:1px solid rgba(255,255,255,0.22);
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   color:var(--text);border-radius:12px;
   font-size:20px;cursor:pointer;
@@ -165,11 +165,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 }
 .dp:hover{background:rgba(40,40,36,0.90);border-color:rgba(255,255,255,0.22);}
 .dp:active{background:rgba(90,154,53,0.30);border-color:var(--accent);transform:scale(.94);}
-.dp.fwd{
-  background:rgba(90,154,53,0.18);
-  border-color:rgba(90,154,53,0.50);color:#a0e060;
-}
-.dp.fwd:active{background:rgba(90,154,53,0.38);border-color:var(--accent-h);}
+/* .dp.fwd は通常の.dpと同じ見た目（特別扱いなし） */
 .dp-e{background:transparent!important;border:none!important;
   pointer-events:none;backdrop-filter:none!important;}
 
@@ -223,8 +219,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   gap:4px;pointer-events:auto;
 }
 .ab{
-  background:rgba(20,20,18,0.80);
-  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(20,20,18,0.88);
+  border:1px solid rgba(255,255,255,0.22);
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   color:var(--text);border-radius:50%;
   font-size:19px;font-weight:700;
@@ -235,14 +231,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 .ab:active{transform:scale(.92);}
 .ab-e{background:transparent!important;border:none!important;
   pointer-events:none;backdrop-filter:none!important;}
-.ab-y{background:rgba(90,154,53,0.18);border-color:rgba(90,154,53,0.45);color:#a0e060;}
+.ab-y{background:rgba(90,154,53,0.80);border-color:rgba(90,154,53,0.90);color:#d0ff90;}
 .ab-y:active{background:rgba(90,154,53,0.38);border-color:var(--accent-h);}
-.ab-x{color:rgba(232,224,208,0.70);}
-.ab-x:active{background:rgba(255,255,255,0.12);}
-.ab-b{color:rgba(232,224,208,0.70);}
-.ab-b:active{background:rgba(255,255,255,0.12);}
-.ab-a{color:rgba(220,100,80,0.85);border-color:rgba(220,100,80,0.25);}
-.ab-a:active{background:rgba(220,80,60,0.20);border-color:rgba(220,100,80,0.50);}
+.ab-x{background:rgba(180,40,110,0.82);border-color:rgba(255,80,160,0.90);color:#ffb0d8;}
+.ab-x:active{background:rgba(255,80,160,0.28);border-color:rgba(255,80,160,0.65);}
+.ab-b{background:rgba(180,40,110,0.82);border-color:rgba(255,80,160,0.90);color:#ffb0d8;}
+.ab-b:active{background:rgba(255,80,160,0.28);border-color:rgba(255,80,160,0.65);}
+.ab-a{background:rgba(90,154,53,0.80);border-color:rgba(90,154,53,0.90);color:#d0ff90;}
+.ab-a:active{background:rgba(90,154,53,0.38);border-color:var(--accent-h);}
 
 /* ===== ゴールメッセージ ===== */
 #goalmsg{
@@ -317,29 +313,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 
 /* ===== ステップ再生パネル ===== */
 #replay-ctrl{
-  position:absolute;bottom:204px;left:10px;
+  position:absolute;top:128px;left:162px;
   background:var(--panel-bg);
   border:1px solid var(--panel-border);
   border-left:2px solid rgba(90,154,53,0.4);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   border-radius:0 10px 10px 0;
-  padding:8px 10px;display:none;pointer-events:auto;
-  text-align:center;font-family:var(--font);min-width:170px;
+  padding:6px 8px;display:none;pointer-events:auto;
+  text-align:center;font-family:var(--font);width:120px;box-sizing:border-box;
 }
 #replay-ctrl .replay-title{
-  font-size:9px;color:var(--text-dim);margin-bottom:4px;
-  font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  font-size:8px;color:var(--text-dim);margin-bottom:2px;
+  font-weight:600;letter-spacing:1px;text-transform:uppercase;
 }
 #replay-ctrl .replay-step{
-  font-size:12px;color:var(--gold);font-weight:800;
-  margin-bottom:7px;font-family:monospace;
+  font-size:11px;color:var(--gold);font-weight:800;
+  margin-bottom:5px;font-family:monospace;white-space:nowrap;
 }
-#replay-ctrl .replay-btns{display:flex;gap:6px;justify-content:center;}
+#replay-ctrl .replay-btns{display:flex;flex-direction:column;gap:4px;align-items:stretch;}
 .rbtn{
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.12);
-  color:var(--text);border-radius:8px;
-  padding:4px 10px;font-size:16px;cursor:pointer;
+  color:var(--text);border-radius:6px;
+  padding:3px 8px;font-size:14px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   transition:background .1s,border-color .1s;
 }
@@ -353,7 +349,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   background:rgba(200,50,30,0.16);border-color:rgba(200,70,50,0.35);color:#ff8070;
 }
 .rbtn.stop:hover{background:rgba(200,50,30,0.26);}
-#replay-progress{font-size:10px;color:var(--text-dim);margin-top:6px;font-weight:500;}
+#replay-progress{font-size:9px;color:var(--text-dim);margin-top:4px;font-weight:500;}
 
 /* ===== その他 ===== */
 #edithint{
@@ -1113,10 +1109,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
     <div class="replay-title">▶ ステップ再生</div>
     <div class="replay-step" id="replay-step-label">-</div>
     <div class="replay-btns">
-      <button class="rbtn" ontouchstart="replayPrev()" onclick="replayPrev()" title="1手戻る">◀</button>
-      <button class="rbtn" ontouchstart="replayToggle()" onclick="replayToggle()" id="replay-play-btn">▶</button>
-      <button class="rbtn" ontouchstart="replayNext()" onclick="replayNext()" title="1手進む">▶|</button>
-      <button class="rbtn stop" ontouchstart="replayStop()" onclick="replayStop()" title="終了して戻る">閉じる</button>
+      <div style="display:flex;gap:4px;justify-content:center;">
+        <button class="rbtn" ontouchstart="replayPrev()" onclick="replayPrev()" title="1手戻る">◀</button>
+        <button class="rbtn" ontouchstart="replayToggle()" onclick="replayToggle()" id="replay-play-btn">▶</button>
+        <button class="rbtn" ontouchstart="replayNext()" onclick="replayNext()" title="1手進む">▶|</button>
+      </div>
+      <button class="rbtn stop" style="width:100%;" ontouchstart="replayStop()" onclick="replayStop()" title="終了して戻る">閉じる</button>
     </div>
     <div id="replay-progress"></div>
   </div>
@@ -1634,9 +1632,9 @@ const MAT={
   green:mat(TX.green),
   grassTop:mat(TX.grassTop),grassSide:mat(TX.grassSide),
   trail:new THREE.MeshLambertMaterial({color:0xffaa00,transparent:true,opacity:0.38}),
-  arrowMove:new THREE.MeshLambertMaterial({color:0xffdd00,transparent:true,opacity:0.85}),
-  arrowLine:new THREE.LineBasicMaterial({color:0xffdd00,transparent:true,opacity:0.6,linewidth:2}),
-  arrowDot:new THREE.MeshLambertMaterial({color:0xff8800,transparent:true,opacity:0.75}),
+  arrowMove:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.85}),
+  arrowLine:new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.6,linewidth:2}),
+  arrowDot:new THREE.MeshLambertMaterial({color:0xff60b0,transparent:true,opacity:0.85}),
   // ループ深さ別矢印マテリアル（深さ1=紫, 2=黄金, 3=深緑）
   loopArrow:[
     new THREE.MeshLambertMaterial({color:0xaa44ee,transparent:true,opacity:0.90}), // 深さ1: 紫
@@ -1867,9 +1865,9 @@ function buildMarkers(){
   const sBase=new THREE.Mesh(new THREE.BoxGeometry(.96,.07,.96),new THREE.MeshLambertMaterial({color:0xdd2222}));
   sBase.position.y=0;startMesh.add(sBase);
   // 矢印（軸＋先端）
-  const sShaft=new THREE.Mesh(GEO.arrowShaft,new THREE.MeshLambertMaterial({color:0xffffff}));
+  const sShaft=new THREE.Mesh(GEO.arrowShaft,new THREE.MeshLambertMaterial({color:0xff2020}));
   sShaft.rotation.x=-Math.PI/2;sShaft.position.set(0,.12,-.1);startMesh.add(sShaft);
-  const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xffffff}));
+  const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xff2020}));
   sHead.rotation.x=-Math.PI/2;sHead.position.set(0,.12,-.38);startMesh.add(sHead);
   startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);
   startMesh.rotation.y=-((startPos.dir||0)*Math.PI/2);
@@ -1922,19 +1920,27 @@ function buildTrail(){
     return depth;
   }
 
+  // ループで同じ経路を繰り返す場合のZ-fighting対策：
+  // historyインデックスに応じてy座標をわずかにずらす（0.03 * cycleNum）
+  // cycleNum = floor(i / firstCycleLen) でサイクル番号を算出
+  const firstCycleLen = loopSnapshots.length > 0 ? loopSnapshots[0].histLen : 0;
+
   for(let i=0;i<pts.length-1;i++){
     const a=pts[i],b=pts[i+1];
     const moved=(a.x!==b.x||a.y!==b.y||a.z!==b.z);
 
-    // この区間の深さを判定
-    const depth = getDepthForStep(i);
-    const matArrow = depth>=0 ? (MAT.loopArrow[depth]||MAT.loopArrow[2]) : MAT.arrowMove;
-    const matLine  = depth>=0 ? (MAT.loopLine[depth] ||MAT.loopLine[2])  : MAT.arrowLine;
-    const matDot   = depth>=0 ? (MAT.loopDot[depth]  ||MAT.loopDot[2])   : MAT.arrowDot;
+    // サイクル番号に応じたyオフセット（Z-fighting防止）
+    const cycleNum = firstCycleLen > 0 ? Math.floor(i / firstCycleLen) : 0;
+    const yOff = cycleNum * 0.04;
+
+    // A案：矢印は白一色（ループ深さは弧の色で表現）
+    const matArrow = MAT.arrowMove;
+    const matLine  = MAT.arrowLine;
+    const matDot   = MAT.arrowDot;
 
     if(moved){
       const dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z;
-      const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,mz=(a.z+b.z)/2;
+      const mx=(a.x+b.x)/2,my=(a.y+b.y)/2+yOff,mz=(a.z+b.z)/2;
 
       const shaft=new THREE.Mesh(GEO.arrowShaft,matArrow);
       shaft.position.set(mx,my,mz);
@@ -1945,22 +1951,159 @@ function buildTrail(){
       scene.add(shaft);trailMeshes.push(shaft);
 
       const head=new THREE.Mesh(GEO.arrowHead,matArrow);
-      head.position.set(b.x*.7+a.x*.3,b.y*.7+a.y*.3,b.z*.7+a.z*.3);
+      head.position.set(b.x*.7+a.x*.3,(b.y*.7+a.y*.3)+yOff,b.z*.7+a.z*.3);
       head.setRotationFromQuaternion(q);
       scene.add(head);trailMeshes.push(head);
 
       const geom=new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(a.x,a.y,a.z),
-        new THREE.Vector3(b.x,b.y,b.z)
+        new THREE.Vector3(a.x,a.y+yOff,a.z),
+        new THREE.Vector3(b.x,b.y+yOff,b.z)
       ]);
       const line=new THREE.Line(geom,matLine);
       scene.add(line);trailMeshes.push(line);
     } else {
       const dot=new THREE.Mesh(GEO.dot,matDot);
-      dot.position.set(a.x,a.y+.15,a.z);
+      dot.position.set(a.x,a.y+.15+yOff,a.z);
       scene.add(dot);trailMeshes.push(dot);
     }
   }
+
+  // ===== A案：ループ弧線＆サイクルマーカー =====
+  const arcColors  = [0xaa44ee, 0xe8c000, 0x228844];
+  const markColors = [0xcc66ff, 0xffdd44, 0x44cc77];
+  const arcRise  = [0.8, 1.6, 2.6];
+  const arcOff   = [{x:-0.6,z:0.4},{x:0.6,z:-0.4},{x:-1.0,z:0.8}];
+
+  // リプレイ中かどうか判定
+  const isReplaying = replaySavedSnapshots.length > 0;
+
+  // アーク描画に使うスナップ：
+  // - 通常時: loopSnapshots（現在展開済みのもの）
+  // - リプレイ中: replaySavedSnapshots（全ループ情報を保持）
+  const arcSnaps = isReplaying ? replaySavedSnapshots : loopSnapshots;
+  if(arcSnaps.length === 0) return;
+
+  // リプレイ中のアーク先行表示用pts：
+  // history（idxまでの実ステップ）に加え、各ループの「表示すべきサイクル」分を
+  // replayLog から先読みして座標を計算する
+  let arcPtsArr = pts; // 通常時はそのまま使う
+  if(isReplaying){
+    // replayLogを使って全ループ展開後の座標列を生成
+    // （プレイヤーは動かさず座標だけ計算）
+    const fullPts = [];
+    let px=startPos.x,py=startPos.y,pz=startPos.z,pd=startPos.dir||0;
+    fullPts.push({x:px,y:py,z:pz,dir:pd});
+    for(let i=0;i<replayLog.length;i++){
+      const a=replayLog[i];
+      const dv=DV[DIRS[pd]];
+      const lv=DV[DIRS[(pd+3)%4]],rv=DV[DIRS[(pd+1)%4]];
+      let nx=px,ny=py,nz=pz,nd=pd;
+      if(a==='fwd')     {nx+=dv[0];ny+=dv[1];nz+=dv[2];}
+      else if(a==='back'){nx-=dv[0];ny-=dv[1];nz-=dv[2];}
+      else if(a==='left'){nx+=lv[0];nz+=lv[2];}
+      else if(a==='right'){nx+=rv[0];nz+=rv[2];}
+      else if(a==='up')  {ny+=1;}
+      else if(a==='down'){ny-=1;}
+      else if(a==='rotL'){nd=(pd+3)%4;}
+      else if(a==='rotR'){nd=(pd+1)%4;}
+      px=nx;py=ny;pz=nz;pd=nd;
+      fullPts.push({x:px,y:py,z:pz,dir:pd});
+    }
+    arcPtsArr = fullPts;
+  }
+
+  // 現在のhistory長からリプレイ中に表示すべきサイクル数を計算
+  // 「現在idxが属するサイクル番号まで」のアークを表示する
+  // snap.logLen = 1サイクルのlogLen、history.length ≈ actionLog.length
+  function getVisibleCycles(snap){
+    if(!isReplaying) return null; // 通常時はnull（全サイクル表示）
+    const cycleLen = snap.logLen; // logLen基準（histLenと同じ）
+    const expandedLen = snap.expandedLogLen || 0;
+    if(cycleLen <= 0 || expandedLen <= 0) return 0;
+    const curIdx = actionLog.length; // 現在のリプレイ位置
+    if(curIdx <= 0) return 0;
+    if(curIdx > expandedLen) return Math.ceil(expandedLen / cycleLen);
+    // 現在いるサイクル番号（1-based）
+    return Math.ceil(curIdx / cycleLen);
+  }
+
+  const deepest = arcSnaps.length - 1;
+  const arcBasePts = isReplaying
+    ? arcPtsArr.length
+    : (loopTotalHistLen > 0 ? loopTotalHistLen : pts.length);
+
+  arcSnaps.forEach((snap, si) => {
+    const cycleLen = snap.histLen;
+    if(cycleLen <= 0) return;
+    const totalPts = arcPtsArr.length;
+    const col      = arcColors[si]  || 0x888888;
+    const markCol  = markColors[si] || 0xaaaaaa;
+    const rise     = arcRise[si]    || (0.8 + si * 0.8);
+    const off      = arcOff[si]     || {x:0,z:0};
+
+    const matArc  = new THREE.LineBasicMaterial({color:col, transparent:true, opacity:0.80, linewidth:2});
+    const matMark = new THREE.MeshLambertMaterial({color:markCol, transparent:true, opacity:0.90});
+    const markGeo = new THREE.SphereGeometry(0.14 + si*0.05, 8, 6);
+
+    // 表示するサイクルのstartIdxを収集する
+    let allowedStartIdxs = [];
+    if(si === deepest){
+      // 最外ループ：全サイクル（or リプレイ中は現在サイクルまで）
+      const visCycles = getVisibleCycles(snap);
+      const totalCycles = visCycles !== null
+        ? visCycles
+        : Math.floor(arcBasePts / cycleLen);
+      for(let r=0; r<totalCycles; r++) allowedStartIdxs.push(r * cycleLen);
+    } else {
+      // 内側ループ：外側ループの1サイクル目内だけ表示
+      const outerSnap = arcSnaps[si+1];
+      const outerCycleLen = outerSnap.histLen;
+      if(outerCycleLen > 0){
+        const innerCyclesInOuter = Math.floor(outerCycleLen / cycleLen);
+        // リプレイ中は内側ループの現在サイクル数も制限する
+        const visCycles = getVisibleCycles(snap);
+        const maxInner = visCycles !== null
+          ? Math.min(visCycles, innerCyclesInOuter)
+          : innerCyclesInOuter;
+        for(let r=0; r<maxInner; r++) allowedStartIdxs.push(r * cycleLen);
+      } else {
+        const visCycles = getVisibleCycles(snap);
+        const totalCycles = visCycles !== null
+          ? visCycles
+          : Math.floor(arcBasePts / cycleLen);
+        for(let r=0; r<totalCycles; r++) allowedStartIdxs.push(r * cycleLen);
+      }
+    }
+
+    for(const startIdx of allowedStartIdxs){
+      const endIdx = Math.min(startIdx + cycleLen, totalPts - 1);
+      if(startIdx >= totalPts) break;
+
+      const pS = arcPtsArr[startIdx];
+      const pE = arcPtsArr[endIdx];
+
+      // サイクル開始点にマーカー球
+      const mark = new THREE.Mesh(markGeo, matMark);
+      mark.position.set(pS.x, pS.y + rise - 0.2, pS.z);
+      scene.add(mark); trailMeshes.push(mark);
+
+      if(pS.x===pE.x && pS.y===pE.y && pS.z===pE.z) continue;
+
+      const mx = (pS.x + pE.x)/2 + off.x;
+      const my = Math.max(pS.y, pE.y) + rise;
+      const mz = (pS.z + pE.z)/2 + off.z;
+
+      const curve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(pS.x, pS.y + rise - 0.2, pS.z),
+        new THREE.Vector3(mx, my, mz),
+        new THREE.Vector3(pE.x, pE.y + rise - 0.2, pE.z)
+      );
+      const arcCurvePoints = curve.getPoints(24);
+      const arcGeom = new THREE.BufferGeometry().setFromPoints(arcCurvePoints);
+      const arcLine = new THREE.Line(arcGeom, matArc);
+      scene.add(arcLine); trailMeshes.push(arcLine);
+    }
+  });
 }
 ghostMesh=new THREE.Mesh(GEO.block,MAT.ghost);ghostMesh.visible=false;scene.add(ghostMesh);
 
@@ -1993,22 +2136,60 @@ function updateLoopLabels(){
   const circled=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
                   '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
   let html='';
-  // 各深さ（loopSnapshot）ごとに、各サイクルの開始historyインデックスを計算してラベルを置く
+  // アークと同じルールでラベルを表示：
+  // - 最外ループ(deepest)：全サイクルにラベル
+  // - 内側ループ(si<deepest)：外側ループの各サイクル先頭のみラベル
+  const deepest=loopSnapshots.length-1;
   for(let si=0;si<loopSnapshots.length;si++){
     const snap=loopSnapshots[si];
-    const cycleLen=snap.histLen; // 1サイクル分のhistoryステップ数
+    const cycleLen=snap.histLen;
+    if(cycleLen<=0) continue;
     const c=LOOP_LABEL_COLORS[si]||LOOP_LABEL_COLORS[2];
-    // サイクル数：history.length / cycleLen（小数切り捨て）
-    const totalCycles=Math.floor(history.length/cycleLen);
-    for(let rep=0;rep<totalCycles;rep++){
-      const histIdx=rep*cycleLen; // このサイクルの開始historyインデックス
-      let wx,wy,wz;
-      if(histIdx < history.length){
-        wx=history[histIdx].x;wy=history[histIdx].y+1.3;wz=history[histIdx].z;
-      } else continue;
-      const sc=worldToScreen(wx,wy,wz);
-      if(sc.behind)continue;
-      const lbl=circled[rep]||(rep+1)+'';
+    // リプレイ中はhistory.lengthがステップごとに変わるため、
+    // 展開完了時に保存したloopTotalHistLenを使う
+    const totalHist = loopTotalHistLen > 0 ? loopTotalHistLen : history.length;
+
+    // 表示するサイクルの開始histIdxを収集
+    let allowedIdxs=[];
+    if(si===deepest){
+      // 最外：全サイクル
+      const totalCycles=Math.floor(totalHist/cycleLen);
+      for(let r=0;r<totalCycles;r++) allowedIdxs.push(r*cycleLen);
+    } else {
+      // 内側ループのラベル表示ルール：
+      // 「直上の外側ループの1番目サイクルの中」だけ表示
+      // アーク描画と同じロジック
+      const outerCycleLen=loopSnapshots[si+1].histLen;
+      if(outerCycleLen>0){
+        const innerCyclesInOuter=Math.floor(outerCycleLen/cycleLen);
+        for(let r=0;r<innerCyclesInOuter;r++){
+          allowedIdxs.push(r*cycleLen);
+        }
+      }
+    }
+
+    // アーク頂点座標を計算してラベルを配置
+    // アーク：始点(histIdx) → 終点(histIdx+cycleLen) の中間を rise 分持ち上げた点
+    const arcRise = [0.8, 1.6, 2.6];
+    const arcOff  = [{x:-0.6,z:0.4},{x:0.6,z:-0.4},{x:-1.0,z:0.8}];
+    const rise = arcRise[si] || (0.8 + si * 0.8);
+    const off  = arcOff[si]  || {x:0,z:0};
+
+    for(let ri=0;ri<allowedIdxs.length;ri++){
+      const startIdx=allowedIdxs[ri];
+      const endIdx=startIdx+cycleLen;
+      if(startIdx>=history.length) continue;
+      // 終点はhistoryの範囲内にクランプ
+      const endClamped=Math.min(endIdx, history.length-1);
+      const pS=history[startIdx];
+      const pE=history[endClamped];
+      // アーク頂点 = 始点・終点の中間を rise 分 Y 方向に持ち上げた点
+      const mx=(pS.x+pE.x)/2 + off.x;
+      const my=Math.max(pS.y,pE.y)+rise;
+      const mz=(pS.z+pE.z)/2 + off.z;
+      const sc=worldToScreen(mx,my,mz);
+      if(sc.behind) continue;
+      const lbl=circled[ri]||(ri+1)+'';
       html+=`<div class="loop-label" style="left:${sc.x}px;top:${sc.y}px;color:${c.color};background:${c.bg};border-color:${c.border};">${lbl}</div>`;
     }
   }
@@ -2041,58 +2222,110 @@ function compressLog(log){
   return out;
 }
 function updateLog(){
-  // loopSnapshotsの区切り位置を元にログを分割表示
-  // スナップがない場合はフラット表示
-  if(loopSnapshots.length === 0){
-    const compressed = compressLog(actionLog);
-    document.getElementById('logspan').innerHTML = compressed.map(({a,n})=>
-      `<span class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
-    ).join('');
-    const b=document.getElementById('logbar');b.scrollTop=b.scrollHeight;
+  const bar = document.getElementById('logbar');
+  const span = document.getElementById('logspan');
+  const circled = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
+                   '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+  const loopClr = ['#d8b4fe','#fde047','#86efac'];
+  const loopBdr = ['rgba(168,85,247,0.80)','rgba(234,179,8,0.80)','rgba(22,163,74,0.80)'];
+
+  // 空状態：キーログウィンドウを非表示
+  if(actionLog.length === 0 && loopSnapshots.length === 0){
+    bar.style.display = 'none';
+    span.innerHTML = '';
     return;
   }
-  // ループブロックの色（深さ順: 紫→黄→緑）
-  const loopBg   = ['rgba(140,60,200,0.30)','rgba(200,160,20,0.30)','rgba(30,140,60,0.30)'];
-  const loopBdr  = ['rgba(168,85,247,0.70)','rgba(234,179,8,0.70)','rgba(22,163,74,0.70)'];
-  const loopClr  = ['#d8b4fe','#fde047','#86efac'];
-  const loopLabel= ['🔁1','🔁2','🔁3']; // キーログ：何重目のループか
+  // 内容あり：表示に戻す
+  bar.style.display = 'flex';
 
-  const snapLens = loopSnapshots.map(s => s.logLen);
-  let html = '';
-  let segStart = 0;
-
-  for(let si = 0; si < snapLens.length; si++){
-    const segEnd = snapLens[si];
-    const segLog = actionLog.slice(segStart, segEnd);
-    const compressed = compressLog(segLog);
-    const bg  = loopBg[si]  || 'rgba(100,100,100,0.20)';
-    const bdr = loopBdr[si] || 'rgba(180,180,180,0.50)';
-    const clr = loopClr[si] || '#ccc';
-    const lbl = loopLabel[si] || (si+1)+'';
-    // 繰り返し回数
-    const cnt = snapLens[si] > 0 ? Math.round(
-      (si+1 < snapLens.length ? snapLens[si+1] : actionLog.length) / snapLens[si]
-    ) : 1;
-    // ループブロックを枠で囲む（番号バッジ付き）
-    html += `<span style="display:inline-flex;align-items:center;gap:2px;background:${bg};border:1px solid ${bdr};border-radius:5px;padding:1px 4px;margin:1px 2px;">`;
-    html += `<span style="color:${clr};font-weight:900;font-size:12px;margin-right:1px;">${lbl}</span>`;
-    html += compressed.map(({a,n})=>
-      `<span class="ls" style="color:${clr};">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
+  // ループなし：縦リスト
+  if(loopSnapshots.length === 0){
+    const compressed = compressLog(actionLog);
+    span.innerHTML = compressed.map(({a,n})=>
+      `<div class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</div>`
     ).join('');
-    html += `<span style="color:${clr};font-weight:800;font-size:11px;margin-left:2px;">🔁×${cnt}</span>`;
-    html += `</span>`;
-    segStart = segEnd;
+    bar.scrollTop = bar.scrollHeight;
+    return;
   }
-  // ループ外の残りのログ
-  if(segStart < actionLog.length){
-    const restLog = actionLog.slice(segStart);
+
+  // ネスト構造を再構築
+  // snap[0]: 最内ループ　logLen=内側1サイクルのstep数
+  // snap[1]: 1つ外のループ　logLen=snap[0]展開後の全step数（内側×N）+ 外側追加step
+  // snap[2]: さらに外　logLen=snap[1]展開後の全step数 + さらに外側追加step
+  //
+  // 各ループの構成：
+  //   innerLen  = 前のsnapのlogLen（なければ0）
+  //   bodyLen   = snap[si].logLen - innerLen　← このループ本体で追加されたstep数
+  //   cnt       = snap[si+1]?.logLen / snap[si].logLen　または actionLog.length / snap[si].logLen
+  //
+  // 表示：内側から外側へ、インデント付きで積む
+
+  // ネスト構造を再帰的にHTML化
+  function renderLoop(si){
+    const snap = loopSnapshots[si];
+    const prevLen = si > 0 ? loopSnapshots[si-1].logLen : 0;
+    const bodyLen = snap.logLen; // このsnapの時点の全体logLen（内側含む）
+    const nextLen = si+1 < loopSnapshots.length ? loopSnapshots[si+1].logLen : actionLog.length;
+    const cnt = bodyLen > 0 ? Math.round(nextLen / bodyLen) : 1;
+    const clr = loopClr[si] || '#ccc';
+    const bdr = loopBdr[si] || 'rgba(180,180,180,0.8)';
+    const indent = si * 4; // px単位のインデント
+
+    let inner = '';
+    if(si > 0){
+      // 内側ループのHTML
+      inner = renderLoop(si - 1);
+    } else {
+      // 最内ループ本体のステップ
+      const innerLog = actionLog.slice(0, snap.logLen);
+      const compressed = compressLog(innerLog);
+      inner = compressed.map(({a,n})=>
+        `<div class="ls" style="color:${clr};">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</div>`
+      ).join('');
+    }
+
+    // このループ本体の「追加ステップ」
+    // snap[si-1].logLen = 内側1サイクルのstep数（例：2）
+    // snap[si].logLen   = 内側×N + 追加ステップ（例：2×4+1=9）
+    // 内側展開の末尾 = snap[si-1].logLen * floor(snap[si].logLen / snap[si-1].logLen)
+    // 追加ステップ = actionLog[ innerEnd .. snap[si].logLen )
+    let addLog = [];
+    if(si > 0){
+      const prevLen = loopSnapshots[si-1].logLen;
+      const n = prevLen > 0 ? Math.floor(snap.logLen / prevLen) : 0;
+      const innerEnd = prevLen * n;
+      addLog = actionLog.slice(innerEnd, snap.logLen);
+    }
+    const addCompressed = compressLog(addLog);
+    const addHtml = addCompressed.map(({a,n})=>
+      `<div class="ls" style="color:${clr};">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</div>`
+    ).join('');
+
+    // A案：ボーダーボックスで囲む＋右下に×N
+    return `<div style="position:relative;border:1.5px solid ${bdr};border-radius:5px;background:rgba(${si===0?'168,85,247':si===1?'234,179,8':'22,163,74'},0.07);margin:1px 0 1px ${indent}px;padding:1px 3px 13px 3px;">
+      <div style="display:flex;flex-direction:column;gap:0px;">
+        ${inner}
+        ${addHtml}
+      </div>
+      <div style="position:absolute;bottom:1px;right:4px;font-size:13px;font-weight:900;color:${clr};">×${cnt}</div>
+    </div>`;
+  }
+
+  const deepest = loopSnapshots.length - 1;
+  let html = renderLoop(deepest);
+
+  // 最外ループより外側の追加ステップ
+  const outerStart = loopSnapshots[deepest].logLen;
+  if(outerStart < actionLog.length){
+    const restLog = actionLog.slice(outerStart);
     const compressed = compressLog(restLog);
     html += compressed.map(({a,n})=>
-      `<span class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</span>`
+      `<div class="ls">${AL[a]||a}${n>1?`<b style="color:#ffcc00">×${n}</b>`:''}</div>`
     ).join('');
   }
-  document.getElementById('logspan').innerHTML = html;
-  const b=document.getElementById('logbar');b.scrollTop=b.scrollHeight;
+
+  span.innerHTML = html;
+  bar.scrollTop = bar.scrollHeight;
 }
 
 // ===== 操作 =====
@@ -2137,16 +2370,36 @@ function act(a){
 }
 function doUndo(){
   if(!history.length)return;
-  // ループスナップショットがあれば一気に戻る
-  if(loopSnapshots.length && loopSnapshots[loopSnapshots.length-1].logLen >= actionLog.length){
-    const snap = loopSnapshots.pop();
-    actionLog.length = snap.logLen;
-    history.length = snap.histLen;
-    player.x=snap.player.x;player.y=snap.player.y;player.z=snap.player.z;player.dir=snap.player.dir;
-    logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
-    buildTrail();updateHUD();updateLog();
+  // ループスナップがある場合：
+  //   最後のループ展開後にキーが追加されていれば→そのキーを1つ消す（通常Undo）
+  //   ループ直後（追加キーなし）であれば→ループ丸ごとUndo
+  if(loopSnapshots.length){
+    const snap = loopSnapshots[loopSnapshots.length-1];
+    // snap.expandedLogLen = このループを展開した直後のactionLog長
+    // それより長ければ → ループ後にキーが追加されている → 通常Undo
+    // それ以下なら    → ループ直後（追加なし） → ループ丸ごとUndo
+    if(actionLog.length > snap.expandedLogLen){
+      // ループ後にキーが追加されている → 通常Undo（1アクション消す）
+      const p=history.pop();actionLog.pop();
+      player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
+      logPos.set(p.x,p.y,p.z);logRot=-(p.dir*Math.PI/2);
+      buildTrail();updateHUD();updateLog();
+    } else {
+      // ループ直後 → ループ丸ごとUndo
+      loopSnapshots.pop();
+      actionLog.length = snap.logLen;
+      history.length = snap.histLen;
+      player.x=snap.player.x;player.y=snap.player.y;player.z=snap.player.z;player.dir=snap.player.dir;
+      logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
+      // 1つ前のスナップがあればそのexpandedを使う、なければ0（ループなし状態）
+      const prevSnap = loopSnapshots[loopSnapshots.length-1];
+      loopTotalHistLen = prevSnap ? prevSnap.expandedHistLen : 0;
+      loopTotalLogLen  = prevSnap ? prevSnap.expandedLogLen  : 0;
+      buildTrail();updateHUD();updateLog();
+    }
     return;
   }
+  // ループなし：1アクションずつ戻る
   const p=history.pop();actionLog.pop();
   player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
   logPos.set(p.x,p.y,p.z);logRot=-(p.dir*Math.PI/2);
@@ -2155,6 +2408,8 @@ function doUndo(){
 
 // ===== ループ機能 =====
 let loopSnapshots = []; // {logLen, histLen, player, depth}
+let loopTotalHistLen = 0; // ループ展開後の最終history長（ラベル計算に使用）
+let loopTotalLogLen = 0;   // ループ展開後の最終actionLog長（Undo判定に使用）
 const LOOP_COLORS = ['#7c3aed','#ca8a04','#166534']; // 紫・黄・深緑
 
 function openLoopModal(){
@@ -2188,8 +2443,10 @@ function applyLoop(){
 
   // 展開前のスナップショットを保存
   loopSnapshots.push({
-    logLen: actionLog.length,
-    histLen: history.length,
+    logLen: actionLog.length,   // 展開前のactionLog長（= 1サイクル長）
+    histLen: history.length,    // 展開前のhistory長（= 1サイクル長）
+    expandedLogLen: 0,          // 展開後のactionLog長（applyLoop末尾で設定）
+    expandedHistLen: 0,         // 展開後のhistory長（applyLoop末尾で設定）
     player: {...player},
     depth: loopSnapshots.length
   });
@@ -2226,6 +2483,11 @@ function applyLoop(){
 
   logPos.set(player.x,player.y,player.z);
   logRot=-(player.dir*Math.PI/2);
+  // 展開後の長さをスナップに記録（Undo判定に使用）
+  loopSnapshots[loopSnapshots.length-1].expandedLogLen = actionLog.length;
+  loopSnapshots[loopSnapshots.length-1].expandedHistLen = history.length;
+  loopTotalHistLen = history.length; // 展開後の最終history長を保存
+  loopTotalLogLen = actionLog.length;  // 展開後の最終actionLog長を保存
   buildTrail();updateHUD();updateLog();
 }
 
@@ -2250,7 +2512,7 @@ function updateNextBtn(){
 
 function resetGame(){
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
-  history=[];actionLog=[];cleared=false;loopSnapshots=[];panLock=false;
+  history=[];actionLog=[];cleared=false;loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;panLock=false;
   document.getElementById('goalmsg').style.display='none';
   logPos.set(startPos.x,startPos.y,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
   drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;isMoving=false;
@@ -2330,16 +2592,19 @@ function hideHelp(){document.getElementById('help-modal').style.display='none';}
 // ===== ステップ再生 =====
 let replayIdx=0,replayLog=[],replayTimer=null,replayPlaying=false;
 let replaySavedPlayer=null;
+let replaySavedSnapshots=[];
 
 function startReplay(){
   if(actionLog.length===0)return;
   // 現在の状態を保存してスタート位置に戻す
   replaySavedPlayer={...player};
   replayLog=[...actionLog];
+  replaySavedSnapshots=loopSnapshots.map(s=>({...s})); // loopSnapshotsを保存
   replayIdx=0;
   // プレイヤーをスタートに戻してトレイルをクリア
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];
+  loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;
   logPos.set(player.x,player.y,player.z);logRot=-((startPos.dir||0)*Math.PI/2);
   drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);
   buildTrail();updateHUD();
@@ -2349,6 +2614,7 @@ function startReplay(){
   document.getElementById('replay-ctrl').style.display='block';
   document.getElementById('ctrl').style.opacity='0.3';
   document.getElementById('ctrl').style.pointerEvents='none';
+  // logbar maxHeight は変更しない（通常状態と同じ）
   replayPlaying=false;
   updateReplayUI();
   // 自動再生開始
@@ -2372,6 +2638,14 @@ function replayApplyStep(idx){
   player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
   history=[];
   const tempLog=[];
+
+  // ループの1サイクル長を取得（replaySavedSnapshotsから）
+  // リプレイ中の描画ルール：
+  // - ループ展開部分（2サイクル目以降）は、1サイクルが完了した時点でまとめて表示
+  // - つまり現在のidxが「Nサイクル完了済み」なら、N×cycleLen分をまとめて描画
+  // - idxが1サイクル目の途中なら、その途中まで1ステップずつ描画
+
+  // まず idx まで普通に再生してplayerを現在位置に進める
   for(let i=0;i<idx;i++){
     const a=replayLog[i];
     const di=player.dir,dv=DV[DIRS[di]];
@@ -2389,37 +2663,122 @@ function replayApplyStep(idx){
     player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
     tempLog.push(a);
   }
+
+  // replayApplyStep は純粋に idx まで再生するだけ
+  // アーク先行表示は buildTrail() 内で replaySavedSnapshots を参照して行う
+
   actionLog=tempLog;
   logPos.set(player.x,player.y,player.z);
   logRot=-(player.dir*Math.PI/2);
+
+  // 現在のactionLog.length（=idx）に応じてloopSnapshotsを再現
+  // replaySavedSnapshotsは展開前のlogLen順に並んでいる
+  // 現時点のactionLog.lengthがsnap.expandedLogLen以上なら→そのスナップは展開済み
+  loopSnapshots = [];
+  loopTotalHistLen = 0;
+  loopTotalLogLen = 0;
+  // リプレイ中のloopSnapshots再現：
+  // actionLog.length（=idx）がsnap.logLen以上になったらスナップを表示
+  // ただしアーク先行表示はbuildTrail()内でreplaySavedSnapshotsを直接参照する
+  for(const snap of replaySavedSnapshots){
+    const expanded = snap.expandedLogLen || snap.logLen;
+    if(actionLog.length >= snap.logLen){
+      loopSnapshots.push({...snap});
+      if(actionLog.length >= expanded){
+        loopTotalHistLen = snap.expandedHistLen || snap.histLen;
+        loopTotalLogLen  = expanded;
+      }
+    }
+  }
+
   buildTrail();updateHUD();updateLog();
   updateReplayUI();
 }
 
+// ===== リプレイ：次ステップのスキップ長を返す =====
+// 現在のreplayIdx（次に踏む手）が「2サイクル目以降の先頭」なら
+// そのサイクル長を返す（→まとめてポン再生）
+// 1サイクル目の途中 or ループ外なら 0 を返す（→1歩ずつ）
+function getReplaySkipLen(nextIdx){
+  if(!replaySavedSnapshots.length) return 0;
+  for(const snap of replaySavedSnapshots){
+    const cycleLen    = snap.logLen;
+    const expandedLen = snap.expandedLogLen || 0;
+    if(cycleLen <= 0 || expandedLen <= 0) continue;
+    // nextIdx がこのループの展開範囲内か
+    if(nextIdx <= 0 || nextIdx > expandedLen) continue;
+    // nextIdx が cycleLen より大きい倍数 = 2サイクル目以降の先頭
+    // （nextIdx === cycleLen は1サイクル目の末尾なのでスキップしない）
+    if(nextIdx > cycleLen && nextIdx % cycleLen === 0){
+      // まとめてスキップする長さ = cycleLen（ただしexpandedLenを超えない）
+      const skip = Math.min(cycleLen, expandedLen - nextIdx);
+      if(skip > 0) return skip;
+    }
+  }
+  return 0;
+}
+
+// ポン再生（緩急付き）：300ms停止 → ポン → 400ms停止
+function replayPon(skip, onDone){
+  clearInterval(replayTimer);
+  replayTimer = null;
+  setTimeout(()=>{
+    // ポン：スキップしてまとめて適用
+    replayIdx += skip;
+    replayApplyStep(replayIdx);
+    setTimeout(()=>{
+      onDone();
+    }, 400);
+  }, 300);
+}
+
 function replayNext(){
   if(replayIdx>=replayLog.length)return;
-  replayIdx++;replayApplyStep(replayIdx);
+  const skip = getReplaySkipLen(replayIdx + 1);
+  if(skip > 0){
+    replayIdx += skip;
+    replayApplyStep(replayIdx);
+  } else {
+    replayIdx++;replayApplyStep(replayIdx);
+  }
 }
 function replayPrev(){
   if(replayIdx<=0)return;
   replayIdx--;replayApplyStep(replayIdx);
 }
+
+function replayTickOnce(){
+  if(replayIdx>=replayLog.length){
+    replayPlaying=false;
+    if(replayTimer){clearInterval(replayTimer);replayTimer=null;}
+    document.getElementById('replay-play-btn').textContent='▶';
+    return;
+  }
+  const nextIdx = replayIdx + 1;
+  const skip = getReplaySkipLen(nextIdx);
+  if(skip > 0){
+    // ポン再生：setIntervalを止めて緩急処理
+    if(replayTimer){clearInterval(replayTimer);replayTimer=null;}
+    replayPon(skip, ()=>{
+      if(!replayPlaying) return;
+      // 再生継続：setIntervalを再開
+      replayTimer = setInterval(replayTickOnce, 600);
+    });
+  } else {
+    replayIdx++;replayApplyStep(replayIdx);
+  }
+}
+
 function replayToggle(){
   if(replayPlaying){
-    replayPlaying=false;clearInterval(replayTimer);
+    replayPlaying=false;
+    if(replayTimer){clearInterval(replayTimer);replayTimer=null;}
     document.getElementById('replay-play-btn').textContent='▶';
   } else {
     if(replayIdx>=replayLog.length)replayIdx=0;
     replayPlaying=true;
     document.getElementById('replay-play-btn').textContent='⏸';
-    replayTimer=setInterval(()=>{
-      if(replayIdx>=replayLog.length){
-        replayPlaying=false;clearInterval(replayTimer);
-        document.getElementById('replay-play-btn').textContent='▶';
-        return;
-      }
-      replayIdx++;replayApplyStep(replayIdx);
-    },600);
+    replayTimer=setInterval(replayTickOnce,600);
   }
 }
 function replayStop(){
@@ -2427,14 +2786,23 @@ function replayStop(){
   document.getElementById('replay-ctrl').style.display='none';
   document.getElementById('ctrl').style.opacity='1';
   document.getElementById('ctrl').style.pointerEvents='auto';
+  // logbar maxHeight は変更しない
   // 再生前の状態を復元（ログは消さない）
   if(replaySavedPlayer){
     player={...replaySavedPlayer};
     logPos.set(player.x,player.y,player.z);
     logRot=-(player.dir*Math.PI/2);
     drawPos.copy(logPos);drawRot=logRot;
+    // loopSnapshotsを元に戻す
+    loopSnapshots = replaySavedSnapshots.map(s=>({...s}));
+    loopTotalHistLen = loopSnapshots.length > 0
+      ? (loopSnapshots[loopSnapshots.length-1].expandedHistLen || 0) : 0;
+    loopTotalLogLen  = loopSnapshots.length > 0
+      ? (loopSnapshots[loopSnapshots.length-1].expandedLogLen  || 0) : 0;
+    actionLog = [...replayLog];
     buildTrail();updateHUD();updateLog();
     replaySavedPlayer=null;
+    replaySavedSnapshots=[];
   }
   cleared=false;
 }
