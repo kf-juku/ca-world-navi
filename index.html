@@ -2555,10 +2555,10 @@ function updateNextBtn(){
 }
 
 function resetGame(){
-  player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
+  player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
   history=[];actionLog=[];cleared=false;loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;panLock=false;
   document.getElementById('goalmsg').style.display='none';
-  logPos.set(startPos.x,startPos.y,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
+  logPos.set(startPos.x,startPos.y+1,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
   drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;isMoving=false;
   buildTrail();updateHUD();updateLog();
   orbit.theta=dirToTheta(startPos.dir);orbit.target.copy(logPos);updateCam();
