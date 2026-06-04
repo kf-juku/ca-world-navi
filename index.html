@@ -1808,6 +1808,7 @@ let player={x:1,y:1,z:1,dir:0};
 let history=[],actionLog=[],cleared=false;
 let editMode=false,editTool='stone';
 let blockMeshes={},tileMeshes={},trailMeshes=[];
+let grassMeshes={};
 let startMesh,goalMesh,ghostMesh;
 let logPos=new THREE.Vector3(1,1,1),logRot=0;
 let drawPos=new THREE.Vector3(1,1,1),drawRot=0;
@@ -1841,11 +1842,52 @@ function buildGround(){
   }
   scene.add(groundGroup);
 }
+// 草をブロック範囲から自動生成（blocksとは分離）
+function calcCenter(){
+  const blockKeys=Object.keys(blocks).filter(k=>blocks[k].type!=='grass');
+  if(blockKeys.length===0) return {cx:startPos.x, cz:startPos.z};
+  let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+  blockKeys.forEach(k=>{const[x,,z]=k.split(',').map(Number);if(x<minX)minX=x;if(x>maxX)maxX=x;if(z<minZ)minZ=z;if(z>maxZ)maxZ=z;});
+  return {cx:Math.round((minX+maxX)/2), cz:Math.round((minZ+maxZ)/2)};
+}
+
+function buildGrass(){
+  Object.values(grassMeshes).forEach(m=>scene.remove(m)); grassMeshes={};
+  if(!grassEnabled) return;
+  const {cx,cz}=calcCenter();
+  const half=Math.floor(grassSize/2);
+  const gy=startPos.y-1;
+  for(let x=cx-half;x<=cx+half;x++) for(let z=cz-half;z<=cz+half;z++){
+    const key=`${x},${gy},${z}`;
+    if(blocks[key]) continue;
+    const m=new THREE.Mesh(GEO.block,matGrass6);
+    m.position.set(x,gy,z);scene.add(m);grassMeshes[key]=m;
+  }
+}
+
+function buildFloor(){
+  Object.values(floorMeshes).forEach(m=>scene.remove(m)); floorMeshes={};
+  if(!floorEnabled) return;
+  const {cx,cz}=calcCenter();
+  const half=Math.floor(floorSize/2);
+  const fy=startPos.y;
+  const skipKeys=new Set(Object.keys(blocks));
+  skipKeys.add(`${startPos.x},${fy},${startPos.z}`);
+  skipKeys.add(`${goalPos.x},${fy},${goalPos.z}`);
+  for(let x=cx-half;x<=cx+half;x++) for(let z=cz-half;z<=cz+half;z++){
+    const key=`${x},${fy},${z}`;
+    if(skipKeys.has(key)) continue;
+    const m=new THREE.Mesh(GEO.block,MAT.stone);
+    m.position.set(x,fy,z);scene.add(m);floorMeshes[key]=m;
+  }
+}
+function clearFloor(){ Object.values(floorMeshes).forEach(m=>scene.remove(m)); floorMeshes={}; }
 function buildBlocks(){
   Object.values(blockMeshes).forEach(m=>scene.remove(m));blockMeshes={};
   Object.entries(blocks).forEach(([k,{type}])=>{
+    if(type==='grass') return;
     const[x,y,z]=k.split(',').map(Number);
-    const colorMats = {glass:MAT.glass, red:MAT.red, blue:MAT.blue, yellow:MAT.yellow, green:MAT.green};
+    const colorMats = {glass:MAT.glass, red:MAT.red, blue:MAT.blue, yellow:MAT.yellow, green:MAT.green, white:MAT.white||new THREE.MeshLambertMaterial({color:0xdfe6e9}), emerald:MAT.emerald||new THREE.MeshLambertMaterial({color:0x00b894}), gold:MAT.gold||new THREE.MeshLambertMaterial({color:0xf9ca24}), redstone:MAT.redstone||new THREE.MeshLambertMaterial({color:0xc0392b}), lapis:MAT.lapis||new THREE.MeshLambertMaterial({color:0x1a4fa0})};
     const blockMat = colorMats[type] || MAT.stone;
     const m=new THREE.Mesh(GEO.block, blockMat);
     m.position.set(x,y,z);scene.add(m);blockMeshes[k]=m;
@@ -2197,7 +2239,7 @@ function updateLoopLabels(){
 }
 
 function refreshAll(){
-  buildGround();buildBlocks();buildTiles();buildMarkers();buildTrail();
+  buildGround();buildBlocks();buildGrass();buildTiles();buildMarkers();buildTrail();
   logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
   drawPos.copy(logPos);drawRot=logRot;
   if(!steveGroup)steveGroup=buildSteve();
@@ -2958,10 +3000,18 @@ async function loadStageById(id) {
 function applyStageData(stage) {
   blocks = {};
   if (stage.blocks) {
-    Object.assign(blocks, stage.blocks);
+    Object.entries(stage.blocks).forEach(([k,v])=>{
+      if(!v||!v.type||v.type==='grass') return;
+      blocks[k]=v;
+    });
   }
   if (stage.startPos) startPos = {dir:0,...stage.startPos};
   if (stage.goalPos)  goalPos  = {...stage.goalPos};
+  // 草・石床フラグ読み込み
+  grassEnabled = stage.grassEnabled !== false;
+  grassSize    = stage.grassSize    || 10;
+  floorEnabled = stage.floorEnabled === true;
+  floorSize    = stage.floorSize    || 10;
   refreshAll();
   resetGame();
 }
