@@ -202,6 +202,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 .midbtn:hover{background:rgba(40,40,36,0.90);border-color:rgba(255,255,255,0.22);}
 .midbtn:active{transform:scale(.95);}
 .midbtn.undo:active{background:rgba(232,192,80,0.20);border-color:rgba(232,192,80,0.50);}
+.midbtn.redo{background:rgba(40,40,60,0.50);border-color:rgba(120,120,160,0.30);color:rgba(180,180,210,0.45);transition:background 0.15s,color 0.15s,border-color 0.15s;}
+.midbtn.redo.active{background:rgba(80,160,232,0.75);border-color:rgba(100,180,255,0.70);color:#e8f4ff;}
+.midbtn.redo.active:active{background:rgba(80,180,255,0.90);border-color:rgba(120,200,255,0.90);}
 .midbtn.rst:active{background:rgba(220,60,40,0.25);border-color:rgba(220,80,60,0.50);}
 .midbtn.play-btn{
   background:rgba(40,100,200,0.85);
@@ -972,6 +975,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
 }
 #loop-ok-btn{background:rgba(40,120,40,0.9);color:#aeffae;border-color:rgba(90,200,90,0.4);}
 #loop-cancel-btn{background:rgba(40,40,40,0.9);color:var(--text-dim);}
+#put-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;}
+#put-modal.active{display:flex;}
+#put-modal-box{background:rgba(20,20,30,.95);border:1px solid rgba(200,80,80,.4);border-radius:12px;padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:200px;align-items:center;}
+#put-modal-box h3{font-size:14px;font-weight:700;color:#ff8888;margin:0;}
+.put-dir-btns{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:6px;width:160px;}
+.put-dir-btn{padding:10px 0;border-radius:8px;border:1px solid rgba(200,80,80,.4);background:rgba(180,40,40,.7);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);}
+.put-dir-btn:active{transform:scale(.95);}
+.put-dir-btn.front{grid-column:2;grid-row:1;}
+.put-dir-btn.left {grid-column:1;grid-row:2;}
+.put-dir-btn.center-empty{grid-column:2;grid-row:2;background:transparent;border:none;pointer-events:none;}
+.put-dir-btn.right{grid-column:3;grid-row:2;}
+.put-dir-btn.back {grid-column:2;grid-row:3;}
+#put-cancel-btn{width:100%;padding:8px 0;border-radius:8px;border:1px solid rgba(100,100,100,.4);background:rgba(40,40,40,.9);color:var(--text-dim);font-size:12px;cursor:pointer;font-family:var(--font);}
+.midbtn.put{background:rgba(180,100,20,.80);border-color:rgba(230,150,50,.50);color:#ffe0a0;}
 #loop-depth-indicator{
   font-size:10px;color:var(--text-dim);text-align:center;
 }
@@ -1091,7 +1108,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
       <tr><td>▲▼◀▶</td><td>前後左右に移動（向いている方向基準）</td></tr>
       <tr><td>↺ ↻</td><td>左右に90度回転</td></tr>
       <tr><td>⬆ ⬇</td><td>上下に移動（階段・段差）</td></tr>
-      <tr><td>↩ 戻す / Ctrl+Z</td><td>一手取り消し</td></tr>
+      <tr><td>↩ Undo / Ctrl+Z</td><td>一手取り消し</td></tr>
+      <tr><td>↪ Redo / Ctrl+Y</td><td>取り消しをやり直す</td></tr>
       <tr><td>🔄</td><td>スタートに戻る</td></tr>
       <tr><td>Space</td><td>上に移動</td></tr>
       <tr><td>Shift</td><td>下に移動</td></tr>
@@ -1147,7 +1165,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
       <div class="step-badge"><span class="step-lbl">STEPS</span><span id="ov-steps">0</span></div>
       <div class="mid-row">
         <button class="midbtn undo" ontouchstart="doUndo()" onclick="doUndo()">↩ Undo</button>
+        <button class="midbtn redo" ontouchstart="doRedo()" onclick="doRedo()">↪ Redo</button>
         <button class="midbtn loop" ontouchstart="openLoopModal()" onclick="openLoopModal()">🔁 くりかえし</button>
+        <button class="midbtn put" ontouchstart="openPutModal()" onclick="openPutModal()">📦 PUT</button>
         <button class="midbtn rst"  ontouchstart="resetGame()" onclick="resetGame()">↺ リセット</button>
       </div>
       <div class="mid-row">
@@ -1473,7 +1493,7 @@ const GRID=16,CELL=1;
 const DIRS=['N','E','S','W'];
 const DV={N:[0,0,-1],E:[1,0,0],S:[0,0,1],W:[-1,0,0]};
 const DL={N:'北',E:'東',S:'南',W:'西'};
-const AL={fwd:'前',back:'後',left:'左',right:'右',up:'上',down:'下',rotL:'左回転',rotR:'右回転'};
+const AL={fwd:'前',back:'後',left:'左',right:'右',up:'上',down:'下',rotL:'左回転',rotR:'右回転',put_front:'前に置く',put_back:'後ろに置く',put_left:'左に置く',put_right:'右に置く'};
 
 // ===== テクスチャ =====
 function mkTex(fn,s=16){
@@ -1750,7 +1770,11 @@ let t1={};
 wrap.addEventListener('touchstart',e=>{
   if(editMode)return;
   if(e.touches.length===1){drag.on=true;drag.x=e.touches[0].clientX;drag.y=e.touches[0].clientY;}
-  else if(e.touches.length===2)t1={d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)};
+  else if(e.touches.length===2){
+    const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    t1={d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),mx,my};
+  }
 },{passive:true});
 wrap.addEventListener('touchmove',e=>{
   if(editMode)return;e.preventDefault();
@@ -1760,11 +1784,23 @@ wrap.addEventListener('touchmove',e=>{
     drag.x=e.touches[0].clientX;drag.y=e.touches[0].clientY;
   }else if(e.touches.length===2){
     const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    // ピンチズーム
     orbit.dist=Math.max(2,Math.min(14,orbit.dist*(t1.d/nd)));t1.d=nd;
+    // 2本指パン（中点の移動をカメラ水平面に沿って平行移動）
+    const nmx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const nmy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    const dx=nmx-t1.mx, dy=nmy-t1.my;
+    const panScale=orbit.dist*0.003;
+    // カメラの水平方向ベクトル（right）と前方ベクトル（forward）
+    const right  = new THREE.Vector3( Math.cos(orbit.theta), 0, -Math.sin(orbit.theta));
+    const forward= new THREE.Vector3(-Math.sin(orbit.theta), 0, -Math.cos(orbit.theta));
+    orbit.target.addScaledVector(right,  -dx*panScale);
+    orbit.target.addScaledVector(forward, dy*panScale);
+    t1.mx=nmx; t1.my=nmy;
   }
   updateCam();
 },{passive:false});
-wrap.addEventListener('touchend',()=>drag.on=false,{passive:true});
+wrap.addEventListener('touchend',e=>{drag.on=false; if(e.touches.length<2)t1={};},{passive:true});
 wrap.addEventListener('wheel',e=>{orbit.dist=Math.max(2,Math.min(14,orbit.dist+e.deltaY*.01));updateCam();},{passive:true});
 
 // ===== スティーブ（高品質3D） =====
@@ -2057,6 +2093,11 @@ function buildTrail(){
       else if(a==='down'){ny-=1;}
       else if(a==='rotL'){nd=(pd+3)%4;}
       else if(a==='rotR'){nd=(pd+1)%4;}
+      // put系はplayer位置変化なし
+      if(a==='put_front'||a==='put_back'||a==='put_left'||a==='put_right'){
+        fullPts.push({x:px,y:py,z:pz,dir:pd});
+        continue;
+      }
       px=nx;py=ny;pz=nz;pd=nd;
       fullPts.push({x:px,y:py,z:pz,dir:pd});
     }
@@ -2395,12 +2436,24 @@ function act(a){
   else if(a==='down'){ny-=1;}
   else if(a==='rotL'){nd=(di+3)%4;}
   else if(a==='rotR'){nd=(di+1)%4;}
+  // PUT系アクション：player位置は変えずトーチを置く
+  if(a==='put_front'||a==='put_back'||a==='put_left'||a==='put_right'){
+    const putDir=a.replace('put_','');
+    history.push({x:player.x,y:player.y,z:player.z,dir:player.dir,putDir});
+    actionLog.push(a);
+    redoStack=[];updateRedoBtn();
+    placeTorch(player.x,player.y,player.z,player.dir,putDir);
+    buildTrail();updateHUD();updateLog();
+    SFX.rotate();
+    return;
+  }
   if(['fwd','back','left','right','up','down'].includes(a)){
     if(nx<0||ny<0||nz<0||nx>=GRID||ny>=GRID||nz>=GRID)return;
     if(hasBlock(nx,ny,nz))return;
   }
   history.push({x:player.x,y:player.y,z:player.z,dir:player.dir});
   actionLog.push(a);
+  redoStack=[];updateRedoBtn();
   player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
   logPos.set(nx,ny,nz);logRot=-(nd*Math.PI/2);
   isMoving=true;
@@ -2431,29 +2484,156 @@ function doUndo(){
     // それ以下なら    → ループ直後（追加なし） → ループ丸ごとUndo
     if(actionLog.length > snap.expandedLogLen){
       // ループ後にキーが追加されている → 通常Undo（1アクション消す）
+      const savedSnap={history:[...history],actionLog:[...actionLog],loopSnapshots:[...loopSnapshots]};
       const p=history.pop();actionLog.pop();
+      redoStack.push(savedSnap);
       player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
       logPos.set(p.x,p.y,p.z);logRot=-(p.dir*Math.PI/2);
+      rebuildTorches();
+      updateRedoBtn();
       buildTrail();updateHUD();updateLog();
     } else {
       // ループ直後 → ループ丸ごとUndo
+      const savedSnap={history:[...history],actionLog:[...actionLog],loopSnapshots:[...loopSnapshots]};
       loopSnapshots.pop();
       actionLog.length = snap.logLen;
       history.length = snap.histLen;
+      redoStack.push(savedSnap);
       player.x=snap.player.x;player.y=snap.player.y;player.z=snap.player.z;player.dir=snap.player.dir;
       logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
       // 1つ前のスナップがあればそのexpandedを使う、なければ0（ループなし状態）
       const prevSnap = loopSnapshots[loopSnapshots.length-1];
       loopTotalHistLen = prevSnap ? prevSnap.expandedHistLen : 0;
       loopTotalLogLen  = prevSnap ? prevSnap.expandedLogLen  : 0;
+      rebuildTorches();
+      updateRedoBtn();
       buildTrail();updateHUD();updateLog();
     }
     return;
   }
   // ループなし：1アクションずつ戻る
+  const savedSnap={history:[...history],actionLog:[...actionLog],loopSnapshots:[...loopSnapshots]};
   const p=history.pop();actionLog.pop();
+  redoStack.push(savedSnap);
   player.x=p.x;player.y=p.y;player.z=p.z;player.dir=p.dir;
   logPos.set(p.x,p.y,p.z);logRot=-(p.dir*Math.PI/2);
+  rebuildTorches();
+  updateRedoBtn();
+  buildTrail();updateHUD();updateLog();
+}
+
+// ===== PUTトーチ管理 =====
+let placedTorches = [];
+let redoStack = []; // {actionLog, history, loopSnapshots}
+
+function getDirVec(dir, putDir){
+  const dv  = DV[DIRS[dir]];
+  const bv  = [-dv[0],0,-dv[2]];
+  const lv  = DV[DIRS[(dir+3)%4]];
+  const rv  = DV[DIRS[(dir+1)%4]];
+  if(putDir==='front') return [dv[0],0,dv[2]];
+  if(putDir==='back')  return [bv[0],0,bv[2]];
+  if(putDir==='left')  return [lv[0],0,lv[2]];
+  if(putDir==='right') return [rv[0],0,rv[2]];
+  return [0,0,0];
+}
+
+function placeTorch(px, py, pz, dir, putDir){
+  const v = getDirVec(dir, putDir);
+  const tx = px + v[0];
+  const ty = py;
+  const tz = pz + v[2];
+  const g = new THREE.Group();
+  // 棒（レッドストーン色）
+  const stick = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.06, 0.65, 6),
+    new THREE.MeshLambertMaterial({color:0x8b0000})
+  );
+  stick.position.y = 0.32;
+  g.add(stick);
+  // 炎（赤く光る球）
+  const flame = new THREE.Mesh(
+    new THREE.SphereGeometry(0.13, 6, 6),
+    new THREE.MeshLambertMaterial({color:0xff2200, emissive:0xaa1100})
+  );
+  flame.position.y = 0.72;
+  g.add(flame);
+  g.position.set(tx, ty, tz);
+  scene.add(g);
+  placedTorches.push({x:tx, y:ty, z:tz, mesh:g});
+  return g;
+}
+
+function clearTorches(){
+  placedTorches.forEach(t=>scene.remove(t.mesh));
+  placedTorches=[];
+}
+function updateRedoBtn(){
+  const btn=document.querySelector('.midbtn.redo');
+  if(!btn)return;
+  if(redoStack.length>0){btn.classList.add('active');}
+  else{btn.classList.remove('active');}
+}
+function rebuildTorches(){
+  // historyの中のput系エントリを全スキャンしてトーチを再描画
+  clearTorches();
+  for(const p of history){
+    if(p.putDir !== undefined){
+      placeTorch(p.x, p.y, p.z, p.dir, p.putDir);
+    }
+  }
+}
+function doRedo(){
+  if(!redoStack.length) return;
+  const snap = redoStack.pop();
+  history     = snap.history;
+  actionLog   = snap.actionLog;
+  loopSnapshots = snap.loopSnapshots;
+  // playerをhistoryの最後から復元
+  if(history.length){
+    const last = history[history.length-1];
+    // put系は座標変化なしなので次の非put履歴からplayer位置を取る
+    // historyはアクション前の状態を記録しているため、最後の非putを探す
+    let px=startPos.x,py=startPos.y+1,pz=startPos.z,pd=startPos.dir||0;
+    for(const h of history){
+      if(h.putDir===undefined){ px=h.x;py=h.y;pz=h.z;pd=h.dir; }
+    }
+    // 最後のエントリがputでなければそのエントリの後の状態＝最後の非put後の移動先を使う
+    // 実際の座標はactionLogから再シミュレーション（簡易版：historyの最後から取得）
+    // historyはact()の「移動前」状態を記録。最後のhistory+最後のアクションが現在位置
+    const lastH = history[history.length-1];
+    if(lastH.putDir===undefined){
+      // 最後のactionでplayer座標が変わった場合、実際のplayer座標はhistoryに入っていない
+      // → actionLogの最後を再適用してplayer位置を求める
+      const di=lastH.dir, dv=DV[DIRS[di]];
+      const lv=DV[DIRS[(di+3)%4]], rv=DV[DIRS[(di+1)%4]];
+      const aa=actionLog[actionLog.length-1];
+      let nx=lastH.x,ny=lastH.y,nz=lastH.z,nd=lastH.dir;
+      if(aa==='fwd'){nx+=dv[0];ny+=dv[1];nz+=dv[2];}
+      else if(aa==='back'){nx-=dv[0];ny-=dv[1];nz-=dv[2];}
+      else if(aa==='left'){nx+=lv[0];nz+=lv[2];}
+      else if(aa==='right'){nx+=rv[0];nz+=rv[2];}
+      else if(aa==='up'){ny+=1;}
+      else if(aa==='down'){ny-=1;}
+      else if(aa==='rotL'){nd=(di+3)%4;}
+      else if(aa==='rotR'){nd=(di+1)%4;}
+      player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
+    } else {
+      // 最後がputの場合：playerはputアクション時に動いていない
+      // → historyの最後のput以前のplayer座標を使う
+      // historyに記録されているのはアクション前の座標なので、
+      // 最後のput entry自体がplayer位置（put時はplayer動かない）
+      player.x=lastH.x;player.y=lastH.y;player.z=lastH.z;player.dir=lastH.dir;
+    }
+  } else {
+    player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
+  }
+  loopTotalHistLen = loopSnapshots.length ? loopSnapshots[loopSnapshots.length-1].expandedHistLen : 0;
+  loopTotalLogLen  = loopSnapshots.length ? loopSnapshots[loopSnapshots.length-1].expandedLogLen  : 0;
+  logPos.set(player.x,player.y,player.z);
+  logRot=-(player.dir*Math.PI/2);
+  rebuildTorches();
+  updateRedoBtn();
   buildTrail();updateHUD();updateLog();
 }
 
@@ -2462,6 +2642,18 @@ let loopSnapshots = []; // {logLen, histLen, player, depth}
 let loopTotalHistLen = 0; // ループ展開後の最終history長（ラベル計算に使用）
 let loopTotalLogLen = 0;   // ループ展開後の最終actionLog長（Undo判定に使用）
 const LOOP_COLORS = ['#7c3aed','#ca8a04','#166534']; // 紫・黄・深緑
+
+function openPutModal(){
+  if(cleared||editMode||replayPlaying)return;
+  document.getElementById('put-modal').classList.add('active');
+}
+function closePutModal(){
+  document.getElementById('put-modal').classList.remove('active');
+}
+function applyPut(dir){
+  closePutModal();
+  act('put_'+dir);
+}
 
 function openLoopModal(){
   if(actionLog.length === 0){ return; }
@@ -2527,6 +2719,12 @@ function applyLoop(){
       else if(a==='down'){ny-=1;}
       else if(a==='rotL'){nd=(di+3)%4;}
       else if(a==='rotR'){nd=(di+1)%4;}
+      // put系：playerを動かさずhistoryに記録
+      if(a==='put_front'||a==='put_back'||a==='put_left'||a==='put_right'){
+        history.push({x:player.x,y:player.y,z:player.z,dir:player.dir,putDir:a.replace('put_','')});
+        actionLog.push(a);
+        continue;
+      }
       actionLog.push(a);
       player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
     }
@@ -2563,7 +2761,7 @@ function updateNextBtn(){
 
 function resetGame(){
   player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
-  history=[];actionLog=[];cleared=false;loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;panLock=false;
+  history=[];actionLog=[];cleared=false;loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;panLock=false;redoStack=[];updateRedoBtn();clearTorches();
   document.getElementById('goalmsg').style.display='none';
   logPos.set(startPos.x,startPos.y+1,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
   drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;isMoving=false;
@@ -2655,6 +2853,7 @@ function startReplay(){
   // プレイヤーをスタートに戻してトレイルをクリア
   player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
   history=[];
+  clearTorches();
   loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;
   logPos.set(player.x,player.y,player.z);logRot=-((startPos.dir||0)*Math.PI/2);
   drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);
@@ -2688,6 +2887,7 @@ function replayApplyStep(idx){
   // idxステップ目の状態をゼロから再現
   player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
   history=[];
+  clearTorches();
   const tempLog=[];
 
   // ループの1サイクル長を取得（replaySavedSnapshotsから）
@@ -2710,6 +2910,14 @@ function replayApplyStep(idx){
     else if(a==='down'){ny-=1;}
     else if(a==='rotL'){nd=(di+3)%4;}
     else if(a==='rotR'){nd=(di+1)%4;}
+    // put系：playerを動かさずトーチを再現
+    if(a==='put_front'||a==='put_back'||a==='put_left'||a==='put_right'){
+      const putDir=a.replace('put_','');
+      history.push({x:player.x,y:player.y,z:player.z,dir:player.dir,putDir});
+      placeTorch(player.x,player.y,player.z,player.dir,putDir);
+      tempLog.push(a);
+      continue;
+    }
     history.push({x:player.x,y:player.y,z:player.z,dir:player.dir});
     player.x=nx;player.y=ny;player.z=nz;player.dir=nd;
     tempLog.push(a);
@@ -2877,8 +3085,9 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
-  // Ctrl+Z: Undo
+  // Ctrl+Z: Undo / Ctrl+Y: Redo
   if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();doUndo();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key==='y'){e.preventDefault();doRedo();return;}
   if(replayPlaying)return;
   const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'rotL',ArrowRight:'rotR',w:'fwd',s:'back',a:'left',d:'right',q:'rotL',e:'rotR',' ':'up',Shift:'down',z:'undo'};
   if(m[e.key]==='undo'){doUndo();return;}
@@ -3814,6 +4023,20 @@ loadStageList();
       <button id="loop-cancel-btn" onclick="closeLoopModal()">キャンセル</button>
       <button id="loop-ok-btn" onclick="applyLoop()">OK</button>
     </div>
+  </div>
+</div>
+
+<div id="put-modal">
+  <div id="put-modal-box">
+    <h3>📦 どこに置く？</h3>
+    <div class="put-dir-btns">
+      <button class="put-dir-btn front" ontouchstart="applyPut('front')" onclick="applyPut('front')">⬆<br>前</button>
+      <button class="put-dir-btn left"  ontouchstart="applyPut('left')"  onclick="applyPut('left')">⬅ 左</button>
+      <div class="put-dir-btn center-empty"></div>
+      <button class="put-dir-btn right" ontouchstart="applyPut('right')" onclick="applyPut('right')">右 ➡</button>
+      <button class="put-dir-btn back"  ontouchstart="applyPut('back')"  onclick="applyPut('back')">後<br>⬇</button>
+    </div>
+    <button id="put-cancel-btn" ontouchstart="closePutModal()" onclick="closePutModal()">キャンセル</button>
   </div>
 </div>
 
