@@ -1809,6 +1809,8 @@ let history=[],actionLog=[],cleared=false;
 let editMode=false,editTool='stone';
 let blockMeshes={},tileMeshes={},trailMeshes=[];
 let grassMeshes={};
+let floorMeshes={};
+let grassSize=10, floorSize=10, grassEnabled=true, floorEnabled=false;
 let startMesh,goalMesh,ghostMesh;
 let logPos=new THREE.Vector3(1,1,1),logRot=0;
 let drawPos=new THREE.Vector3(1,1,1),drawRot=0;
