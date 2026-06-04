@@ -2042,7 +2042,7 @@ function buildTrail(){
     // replayLogを使って全ループ展開後の座標列を生成
     // （プレイヤーは動かさず座標だけ計算）
     const fullPts = [];
-    let px=startPos.x,py=startPos.y,pz=startPos.z,pd=startPos.dir||0;
+    let px=startPos.x,py=startPos.y+1,pz=startPos.z,pd=startPos.dir||0;
     fullPts.push({x:px,y:py,z:pz,dir:pd});
     for(let i=0;i<replayLog.length;i++){
       const a=replayLog[i];
@@ -2653,7 +2653,7 @@ function startReplay(){
   replaySavedSnapshots=loopSnapshots.map(s=>({...s})); // loopSnapshotsを保存
   replayIdx=0;
   // プレイヤーをスタートに戻してトレイルをクリア
-  player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
+  player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
   history=[];
   loopSnapshots=[];loopTotalHistLen=0;loopTotalLogLen=0;
   logPos.set(player.x,player.y,player.z);logRot=-((startPos.dir||0)*Math.PI/2);
@@ -2686,7 +2686,7 @@ function updateReplayUI(){
 
 function replayApplyStep(idx){
   // idxステップ目の状態をゼロから再現
-  player={x:startPos.x,y:startPos.y,z:startPos.z,dir:startPos.dir||0};
+  player={x:startPos.x,y:startPos.y+1,z:startPos.z,dir:startPos.dir||0};
   history=[];
   const tempLog=[];
 
