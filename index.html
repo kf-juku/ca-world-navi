@@ -2750,8 +2750,13 @@ function replayApplyStep(idx){
 // 現在のreplayIdx（次に踏む手）が「2サイクル目以降の先頭」なら
 // そのサイクル長を返す（→まとめてポン再生）
 // 1サイクル目の途中 or ループ外なら 0 を返す（→1歩ずつ）
+// ルール：上位（外側）ループが存在するときだけポン再生する
+//   例）紫だけ → ポン再生しない
+//       黄色+紫 → 紫のみポン再生、黄色はしない
 function getReplaySkipLen(nextIdx){
   if(!replaySavedSnapshots.length) return 0;
+  // depthの最大値（最外ループのdepth）を取得
+  const maxDepth = Math.max(...replaySavedSnapshots.map(s => s.depth));
   for(const snap of replaySavedSnapshots){
     const cycleLen    = snap.logLen;
     const expandedLen = snap.expandedLogLen || 0;
@@ -2759,9 +2764,9 @@ function getReplaySkipLen(nextIdx){
     // nextIdx がこのループの展開範囲内か
     if(nextIdx <= 0 || nextIdx > expandedLen) continue;
     // nextIdx が cycleLen より大きい倍数 = 2サイクル目以降の先頭
-    // （nextIdx === cycleLen は1サイクル目の末尾なのでスキップしない）
     if(nextIdx > cycleLen && nextIdx % cycleLen === 0){
-      // まとめてスキップする長さ = cycleLen（ただしexpandedLenを超えない）
+      // 上位（外側）ループが存在する = 自分が最外ループでないときだけポン再生
+      if(snap.depth >= maxDepth) continue; // 最外ループはポン再生しない
       const skip = Math.min(cycleLen, expandedLen - nextIdx);
       if(skip > 0) return skip;
     }
