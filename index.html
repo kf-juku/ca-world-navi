@@ -1837,14 +1837,9 @@ function hasBlock(x,y,z){return!!blocks[`${x},${y},${z}`];}
 // ===== シーン構築 =====
 let groundGroup;
 function buildGround(){
-  if(groundGroup)scene.remove(groundGroup);
+  // 草地面の描画はbuildGrass()に統合。この関数は互換性のために残す（何もしない）
+  if(groundGroup) scene.remove(groundGroup);
   groundGroup=new THREE.Group();
-  // grassEnabledがfalseのときは地面を表示しない
-  if(grassEnabled){
-    for(let x=0;x<GRID;x++)for(let z=0;z<GRID;z++){
-      const m=new THREE.Mesh(GEO.ground,matGrass6);m.position.set(x,-1,z);groundGroup.add(m);
-    }
-  }
   scene.add(groundGroup);
 }
 // 草をブロック範囲から自動生成（blocksとは分離）
