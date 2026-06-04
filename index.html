@@ -1803,7 +1803,7 @@ function buildSteve(){
 
 // ===== 状態 =====
 let blocks={},tiles={};
-let startPos={x:1,y:1,z:1,dir:0},goalPos={x:GRID-2,y:1,z:GRID-2};
+let startPos={x:1,y:0,z:1,dir:0},goalPos={x:GRID-2,y:0,z:GRID-2};
 let player={x:1,y:1,z:1,dir:0};
 let history=[],actionLog=[],cleared=false;
 let editMode=false,editTool='stone';
@@ -1826,7 +1826,7 @@ function buildDefault(){
   [[1,1,0],[2,1,1],[3,1,2],[4,1,0],[5,1,3],[6,1,4],[7,1,1],[8,1,2],[9,1,0],[10,1,3],
    [1,2,4],[2,2,0],[3,2,1],[4,2,3],[5,2,2],[6,2,0],[7,2,4],[8,2,1],[9,2,3],[10,2,2],
   ].forEach(([x,z,c])=>tiles[`${x},${z}`]=c);
-  startPos={x:1,y:1,z:1,dir:0};goalPos={x:GRID-2,y:1,z:GRID-2};
+  startPos={x:1,y:0,z:1,dir:0};goalPos={x:GRID-2,y:0,z:GRID-2};
 }
 function setBlock(x,y,z,t){blocks[`${x},${y},${z}`]={type:t};}
 function remBlock(x,y,z){delete blocks[`${x},${y},${z}`];}
@@ -1911,11 +1911,11 @@ function buildMarkers(){
   sShaft.rotation.x=-Math.PI/2;sShaft.position.set(0,.12,-.1);startMesh.add(sShaft);
   const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xff2020}));
   sHead.rotation.x=-Math.PI/2;sHead.position.set(0,.12,-.38);startMesh.add(sHead);
-  startMesh.position.set(startPos.x,startPos.y-.52,startPos.z);
+  startMesh.position.set(startPos.x,startPos.y+0.5,startPos.z);
   startMesh.rotation.y=-((startPos.dir||0)*Math.PI/2);
   scene.add(startMesh);
   // ゴール
-  goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y-.52,goalPos.z);scene.add(goalMesh);
+  goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y+0.5,goalPos.z);scene.add(goalMesh);
   if(!goalMesh._gem){const gem=new THREE.Mesh(GEO.gem,new THREE.MeshLambertMaterial({color:0x00eeff,emissive:0x009999}));gem.position.y=.55;goalMesh.add(gem);goalMesh._gem=gem;}
 }
 function buildTrail(){
@@ -2239,7 +2239,7 @@ function updateLoopLabels(){
 }
 
 function refreshAll(){
-  buildGround();buildBlocks();buildGrass();buildTiles();buildMarkers();buildTrail();
+  buildGround();buildBlocks();buildGrass();buildFloor();buildTiles();buildMarkers();buildTrail();
   logPos.set(player.x,player.y,player.z);logRot=-(player.dir*Math.PI/2);
   drawPos.copy(logPos);drawRot=logRot;
   if(!steveGroup)steveGroup=buildSteve();
