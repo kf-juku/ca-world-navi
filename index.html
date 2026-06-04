@@ -1839,8 +1839,11 @@ let groundGroup;
 function buildGround(){
   if(groundGroup)scene.remove(groundGroup);
   groundGroup=new THREE.Group();
-  for(let x=0;x<GRID;x++)for(let z=0;z<GRID;z++){
-    const m=new THREE.Mesh(GEO.ground,matGrass6);m.position.set(x,-1,z);groundGroup.add(m);
+  // grassEnabledがfalseのときは地面を表示しない
+  if(grassEnabled){
+    for(let x=0;x<GRID;x++)for(let z=0;z<GRID;z++){
+      const m=new THREE.Mesh(GEO.ground,matGrass6);m.position.set(x,-1,z);groundGroup.add(m);
+    }
   }
   scene.add(groundGroup);
 }
