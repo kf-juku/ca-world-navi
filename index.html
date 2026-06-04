@@ -1810,7 +1810,7 @@ let editMode=false,editTool='stone';
 let blockMeshes={},tileMeshes={},trailMeshes=[];
 let grassMeshes={};
 let floorMeshes={};
-let grassSize=10, floorSize=10, grassEnabled=true, floorEnabled=false;
+let grassSize=10, floorSize=10, grassEnabled=false, floorEnabled=false;
 let startMesh,goalMesh,ghostMesh;
 let logPos=new THREE.Vector3(1,1,1),logRot=0;
 let drawPos=new THREE.Vector3(1,1,1),drawRot=0;
@@ -1916,9 +1916,18 @@ function buildMarkers(){
   startMesh.position.set(startPos.x,startPos.y+0.5,startPos.z);
   startMesh.rotation.y=-((startPos.dir||0)*Math.PI/2);
   scene.add(startMesh);
-  // ゴール
-  goalMesh=new THREE.Mesh(GEO.marker,MAT.goal);goalMesh.position.set(goalPos.x,goalPos.y+0.5,goalPos.z);scene.add(goalMesh);
-  if(!goalMesh._gem){const gem=new THREE.Mesh(GEO.gem,new THREE.MeshLambertMaterial({color:0x00eeff,emissive:0x009999}));gem.position.y=.55;goalMesh.add(gem);goalMesh._gem=gem;}
+  // ゴール：マゼンタブロック＋浮遊ダイヤ宝石
+  goalMesh = new THREE.Group();
+  const gBase = new THREE.Mesh(GEO.block, new THREE.MeshLambertMaterial({color:0xe91e8c}));
+  gBase.position.y = 0;
+  goalMesh.add(gBase);
+  const gGem = new THREE.Mesh(GEO.gem, new THREE.MeshLambertMaterial({color:0x00eeff, emissive:0x009999}));
+  gGem.position.y = 1.0;
+  gGem.scale.set(1.5, 1.5, 1.5);
+  goalMesh.add(gGem);
+  goalMesh._gem = gGem;
+  goalMesh.position.set(goalPos.x, goalPos.y, goalPos.z);
+  scene.add(goalMesh);
 }
 function buildTrail(){
   trailMeshes.forEach(m=>scene.remove(m));trailMeshes=[];
@@ -3010,7 +3019,7 @@ function applyStageData(stage) {
   if (stage.startPos) startPos = {dir:0,...stage.startPos};
   if (stage.goalPos)  goalPos  = {...stage.goalPos};
   // 草・石床フラグ読み込み
-  grassEnabled = stage.grassEnabled !== false;
+  grassEnabled = stage.grassEnabled === true;
   grassSize    = stage.grassSize    || 10;
   floorEnabled = stage.floorEnabled === true;
   floorSize    = stage.floorSize    || 10;
