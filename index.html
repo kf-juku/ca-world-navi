@@ -2661,7 +2661,15 @@ function act(a){
     return;
   }
   if(['fwd','back','left','right','up','down'].includes(a)){
-    if(nx<0||ny<0||nz<0||nx>=GRID||ny>=GRID||nz>=GRID)return;
+    // 川上さん指示(2026-06-16)：負座標ステージで移動できないバグ修正。
+    //   旧判定は 0〜GRID 固定だったため、負座標に作られたステージ（例 startPos.x=-6）では
+    //   どの方向に動いても nx<0 で弾かれ無反応になっていた。
+    //   移動可能範囲は「土台（草・石床）のある範囲＝calcBounds のブロック範囲±1余白」に合わせる（負も含む）。
+    //   y は地面より下（落下）に行かない下限のみ残し、上限はステージを高く積めるよう緩める。
+    const b=calcBounds();
+    const minMX=b.minX-1, maxMX=b.maxX+1, minMZ=b.minZ-1, maxMZ=b.maxZ+1;
+    if(nx<minMX||nx>maxMX||nz<minMZ||nz>maxMZ)return;
+    if(ny<0||ny>64)return;
     if(hasBlock(nx,ny,nz))return;
   }
   history.push({x:player.x,y:player.y,z:player.z,dir:player.dir});
