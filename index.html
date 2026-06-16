@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CAワールドナビ</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20y%3D%27.9em%27%20font-size%3D%2790%27%3E%F0%9F%8C%90%3C/text%3E%3C/svg%3E">
+    <title>CAワールドナビ</title>
 <style>
 /* ===== CAワールドナビ — Clean Dark UI v4 ===== */
 :root{
@@ -2143,16 +2144,18 @@ function buildTiles(){
 }
 function buildMarkers(){
   if(startMesh)scene.remove(startMesh);if(goalMesh)scene.remove(goalMesh);
-  // スタート：赤い平板＋向き矢印
+  // スタート：赤いブロック＋向き矢印（ブロック上面がスタート地点）
+  // 川上さん指示(2026-06-16)：プレイ画面でスタートが薄板で実体が無く床が透けて見えるバグを修正。
+  //   エディター側 buildMarkers と同じ GEO.block の赤い立方体・矢印は白・y=startPos.y に統一する。
   startMesh=new THREE.Group();
-  const sBase=new THREE.Mesh(new THREE.BoxGeometry(.96,.07,.96),new THREE.MeshLambertMaterial({color:0xdd2222}));
+  const sBase=new THREE.Mesh(GEO.block,new THREE.MeshLambertMaterial({color:0xdd2222}));
   sBase.position.y=0;startMesh.add(sBase);
-  // 矢印（軸＋先端）
-  const sShaft=new THREE.Mesh(GEO.arrowShaft,new THREE.MeshLambertMaterial({color:0xff2020}));
-  sShaft.rotation.x=-Math.PI/2;sShaft.position.set(0,.12,-.1);startMesh.add(sShaft);
-  const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xff2020}));
-  sHead.rotation.x=-Math.PI/2;sHead.position.set(0,.12,-.38);startMesh.add(sHead);
-  startMesh.position.set(startPos.x,startPos.y+0.5,startPos.z);
+  // 矢印（軸＋先端）：ブロック上面に配置
+  const sShaft=new THREE.Mesh(GEO.arrowShaft,new THREE.MeshLambertMaterial({color:0xffffff}));
+  sShaft.rotation.x=-Math.PI/2;sShaft.position.set(0,.62,-.1);startMesh.add(sShaft);
+  const sHead=new THREE.Mesh(GEO.arrowHead,new THREE.MeshLambertMaterial({color:0xffffff}));
+  sHead.rotation.x=-Math.PI/2;sHead.position.set(0,.62,-.38);startMesh.add(sHead);
+  startMesh.position.set(startPos.x,startPos.y,startPos.z);
   startMesh.rotation.y=-((startPos.dir||0)*Math.PI/2);
   scene.add(startMesh);
   // ゴール：マゼンタブロック＋浮遊ダイヤ宝石
@@ -2161,7 +2164,7 @@ function buildMarkers(){
   gBase.position.y = 0;
   goalMesh.add(gBase);
   const gGem = new THREE.Mesh(GEO.gem, new THREE.MeshLambertMaterial({color:0x00eeff, emissive:0x009999}));
-  gGem.position.y = 1.0;
+  gGem.position.y = 1.05; // 川上さん指示(2026-06-16)：エディターと宝石高さを統一
   gGem.scale.set(1.5, 1.5, 1.5);
   goalMesh.add(gGem);
   goalMesh._gem = gGem;
