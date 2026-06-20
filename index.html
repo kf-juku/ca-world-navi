@@ -1203,6 +1203,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   .level-card{ padding:12px 14px; gap:7px; }
   #logbar{ top:46px; bottom:160px; width:110px; font-size:12px; }
 }
+
+/* 川上さん指示(2026-06-20)：操作説明をPC/タッチで出し分け。デフォルトPC、body.touchでタッチ表示 */
+.help-touch{display:none;}
+body.touch .help-pc{display:none;}
+body.touch .help-touch{display:table-row;}
 </style>
 </head>
 <body>
@@ -1244,20 +1249,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   <!-- 操作説明モーダル -->
   <div id="help-modal">
     <h2>⛏ 操作説明</h2>
+    <!-- 川上さん指示(2026-06-20)：PCはキーボード説明、タッチ端末はタッチ説明に自動切替（body.touchで出し分け） -->
     <table>
       <tr><td>▲▼◀▶</td><td>前後左右に移動（向いている方向基準）</td></tr>
       <tr><td>↺ ↻</td><td>左右に90度回転</td></tr>
       <tr><td>⬆ ⬇</td><td>上下に移動（階段・段差）</td></tr>
-      <tr><td>↩ Undo / Ctrl+Z</td><td>一手取り消し</td></tr>
-      <tr><td>↪ Redo / Ctrl+Y</td><td>取り消しをやり直す</td></tr>
+      <tr class="help-pc"><td>↩ Undo / Ctrl+Z</td><td>一手取り消し</td></tr>
+      <tr class="help-pc"><td>↪ Redo / Ctrl+Y</td><td>取り消しをやり直す</td></tr>
+      <tr class="help-touch"><td>↩ Undo</td><td>一手取り消し</td></tr>
+      <tr class="help-touch"><td>↪ Redo</td><td>取り消しをやり直す</td></tr>
       <tr><td>🔄</td><td>スタートに戻る</td></tr>
-      <tr><td>Space</td><td>上に移動</td></tr>
-      <tr><td>Shift</td><td>下に移動</td></tr>
+      <tr class="help-pc"><td>Space</td><td>上に移動</td></tr>
+      <tr class="help-pc"><td>Shift</td><td>下に移動</td></tr>
+      <tr class="help-touch"><td>⬆ ⬇ ボタン</td><td>上下に移動</td></tr>
       <tr><td>📷 視点リセット</td><td>カメラをキャラの後ろに戻す</td></tr>
       <tr><td>◁ ▷ カメラ回転</td><td>視点を左右に回転</td></tr>
       <tr><td>▶ 再生</td><td>これまでの動きをコマ送りで再生</td></tr>
-      <tr><td>ドラッグ</td><td>視点を自由に回転</td></tr>
-      <tr><td>ピンチ</td><td>ズームイン・アウト</td></tr>
+      <tr class="help-pc"><td>ドラッグ</td><td>視点を自由に回転</td></tr>
+      <tr class="help-pc"><td>ホイール</td><td>ズームイン・アウト</td></tr>
+      <tr class="help-touch"><td>1本指でなぞる</td><td>視点を自由に回転</td></tr>
+      <tr class="help-touch"><td>ピンチ</td><td>2本指でズーム</td></tr>
     </table>
     <button class="close-btn" onclick="hideHelp()">閉じる</button>
   </div>
@@ -1953,6 +1964,8 @@ const GEO={
 const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+// 川上さん指示(2026-06-20)：タッチ端末判定。操作説明をタッチ用に自動切替する
+if(('ontouchstart' in window)||(navigator.maxTouchPoints>0)){document.body.classList.add('touch');}
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x6ab0d0);
 scene.fog=new THREE.Fog(0x7abde0,20,38);
@@ -4024,7 +4037,7 @@ function renderBuildArea() {
       <span class="sb-label">チャットコマンド</span>
       <div class="sb-input-wrap">
         <input type="text" class="sb-input" placeholder="${hintTxt}"
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" lang="en"
           value="${set.inputVal || ''}" />
       </div>
       <span class="sb-suffix">を<ruby>入力<rt>にゅうりょく</rt></ruby>した<ruby>時<rt>とき</rt></ruby> <span class="sb-plus">⊕</span></span>
