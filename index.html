@@ -1030,7 +1030,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   box-shadow:0 0 12px 2px rgba(90,154,53,0.40);
   animation:pulse-done 1.4s ease-in-out infinite;
 }
-@media(max-width:768px){
+@media(max-width:1040px){
   .level-cards{flex-direction:column;max-width:400px;}
   .level-card{flex:none;}
 }
@@ -2095,6 +2095,25 @@ function calcBounds(){
   return {cx:Math.round((minX+maxX)/2),cz:Math.round((minZ+maxZ)/2),minX,maxX,minZ,maxZ};
 }
 
+// 川上さん指示(2026-06-20)：タブレット対応。ステージ読込時のみ画面にステージ全体が収まるようカメラ距離を自動計算する。
+// 手動ドラッグ・ズームとは非干渉（読込時だけ。resizeでは距離を変えない）。
+function fitCameraDist(){
+  const b=calcBounds();
+  // ステージの実寸（土台±1余白を含む）。X幅・Z奥行きをワールド単位で算出
+  const spanX=(b.maxX-b.minX)+3; // 余白(±1)＋ブロック1マス分
+  const spanZ=(b.maxZ-b.minZ)+3;
+  const aspect=window.innerWidth/window.innerHeight;
+  const vFov=camera.fov*Math.PI/180;            // 垂直方向の視野角(rad)
+  const hFov=2*Math.atan(Math.tan(vFov/2)*aspect); // 水平方向の視野角(rad)
+  // 俯瞰視点なので、画面に映る見かけの広がりは概ね 横=spanX / 奥行きの投影=spanZ*cos(phi)
+  const projZ=spanZ*Math.cos(orbit.phi)+spanX*Math.sin(orbit.phi)*0.0; // 近似：俯角ぶん奥行きは縮む
+  const needV=(spanZ*Math.cos(orbit.phi)+2)/(2*Math.tan(vFov/2)); // 縦に収める距離
+  const needH=(spanX+2)/(2*Math.tan(hFov/2));                      // 横に収める距離
+  let dist=Math.max(needV,needH)*1.12; // 1.12=画面端の余白
+  dist=Math.max(4,Math.min(40,dist));  // 下限4・上限40でクランプ
+  orbit.dist=dist;
+}
+
 function buildGrass(){
   Object.values(grassMeshes).forEach(m=>scene.remove(m)); grassMeshes={};
   const {minX,maxX,minZ,maxZ}=calcBounds();
@@ -2987,7 +3006,7 @@ function resetGame(){
   logPos.set(startPos.x,startPos.y+1,startPos.z);logRot=-((startPos.dir||0)*Math.PI/2);
   drawPos.copy(logPos);drawRot=-((startPos.dir||0)*Math.PI/2);walkTime=0;isMoving=false;
   buildTrail();updateHUD();updateLog();
-  orbit.theta=dirToTheta(startPos.dir);orbit.target.copy(logPos);updateCam();
+  orbit.theta=dirToTheta(startPos.dir);orbit.target.copy(logPos);fitCameraDist();updateCam();
 }
 
 // ===== 編集モード =====
@@ -3050,8 +3069,8 @@ function rotateCamRight(){
   updateCam();
 }
 function resetCam(){
-  orbit.theta=dirToTheta(startPos.dir);orbit.phi=.55;orbit.dist=5.5;
-  orbit.target.copy(drawPos);
+  orbit.theta=dirToTheta(startPos.dir);orbit.phi=.55;
+  orbit.target.copy(drawPos);fitCameraDist();
   updateCam();
 }
 
