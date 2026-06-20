@@ -1183,6 +1183,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0c10;}
   .rotate-sub{font-size:14px;color:var(--text-dim);}
 }
 @keyframes rotate-bounce{0%,100%{transform:rotate(0deg);}50%{transform:rotate(-90deg);}}
+
+/* 川上さん指示(2026-06-20)：スマホ横(高さが狭い端末)対応。機種でなく高さで判定し自動縮小 */
+@media(orientation:landscape) and (max-height:500px){
+  /* 3D画面：ボタンを小さくして3Dを見やすく */
+  :root{ --btn-size:42px; }
+  .midbtn{ height:32px; padding:0 10px; font-size:11px; }
+  .midbtn.play-btn{ min-width:84px; }
+  .step-badge{ padding:4px 12px; font-size:13px; min-width:80px; }
+  #hdr{ height:38px; }
+  #status{ top:46px; font-size:10px; padding:5px 9px; }
+  #cam-controls{ top:46px; gap:4px; }
+  .cam-btn{ padding:5px 9px; font-size:10px; }
+  #ctrl{ padding:0 10px 10px; }
+  /* コード練習：カード上部の見切れ防止。上寄せ＋縦詰め＋スクロール */
+  #tut-level-screen{ justify-content:flex-start; gap:12px; padding:14px 16px; }
+  #tut-level-screen h2{ font-size:15px; }
+  #tut-level-screen p{ font-size:11px; }
+  .level-card{ padding:12px 14px; gap:7px; }
+  #logbar{ top:46px; bottom:160px; width:110px; font-size:12px; }
+}
 </style>
 </head>
 <body>
